@@ -1,0 +1,267 @@
+repeat task.wait() until game:IsLoaded()
+
+-----------------------------------------------------
+-- 🔑 KEY SYSTEM — NHẬP ĐÚNG MỚI MỞ MENU
+-----------------------------------------------------
+
+local CORRECT_KEY = "XQHUB123"   -- 👈 ĐỔI KEY TẠI ĐÂY
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Name = "KeySystem"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 350, 0, 200)
+Frame.Position = UDim2.new(0.5, -175, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Frame.Active = true
+Frame.Draggable = true
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1,0,0,50)
+Title.BackgroundTransparency = 1
+Title.Text = "🔑 NHẬP KEY ĐỂ MỞ MENU"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+
+local KeyBox = Instance.new("TextBox", Frame)
+KeyBox.Size = UDim2.new(1,-40,0,45)
+KeyBox.Position = UDim2.new(0,20,0,65)
+KeyBox.PlaceholderText = "Nhập key tại đây..."
+KeyBox.Text = ""
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 20
+KeyBox.TextColor3 = Color3.new(1,1,1)
+KeyBox.BackgroundColor3 = Color3.fromRGB(55,55,55)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0,10)
+
+local Confirm = Instance.new("TextButton", Frame)
+Confirm.Size = UDim2.new(1,-40,0,45)
+Confirm.Position = UDim2.new(0,20,0,125)
+Confirm.Text = "MỞ MENU"
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextSize = 22
+Confirm.TextColor3 = Color3.new(1,1,1)
+Confirm.BackgroundColor3 = Color3.fromRGB(60,120,255)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0,10)
+
+local Wrong = Instance.new("TextLabel", Frame)
+Wrong.Size = UDim2.new(1,0,0,30)
+Wrong.Position = UDim2.new(0,0,1,-30)
+Wrong.BackgroundTransparency = 1
+Wrong.Text = ""
+Wrong.Font = Enum.Font.GothamBold
+Wrong.TextSize = 18
+Wrong.TextColor3 = Color3.fromRGB(255,80,80)
+
+local function UnlockMenu()
+    Frame.Visible = false
+    task.wait(0.2)
+    LoadMainUI()
+end
+
+Confirm.MouseButton1Click:Connect(function()
+    if KeyBox.Text == CORRECT_KEY then
+        Wrong.Text = "Đúng key! Đang mở menu..."
+        task.wait(0.4)
+        Frame:Destroy()
+        LoadMainUI()
+    else
+        Wrong.Text = "❌ Sai key!"
+    end
+end)
+
+-----------------------------------------------------
+-- 🟣 SAU KHI NHẬP KEY ĐÚNG → CHẠY FLUENT UI
+-----------------------------------------------------
+
+function LoadMainUI()
+
+-- 🟢 Nút mở menu chính
+local ScreenGui = Instance.new("ScreenGui")
+local ImageButton = Instance.new("ImageButton")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Parent = game.CoreGui
+ImageButton.Parent = ScreenGui
+ImageButton.Size = UDim2.new(0,40,0,40)
+ImageButton.Position = UDim2.new(0.1,0,0.2,0)
+ImageButton.Image = "http://www.roblox.com/asset/?id=76121098594454"
+ImageButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+ImageButton.Draggable = true
+Instance.new("UICorner", ImageButton).CornerRadius = UDim.new(1,10)
+
+ImageButton.MouseButton1Down:Connect(function()
+	game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+end)
+
+-- 🟣 Load Fluent UI
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+repeat task.wait() until game:IsLoaded()
+
+local Window = Fluent:CreateWindow({
+	Title = "💀Mất Quyền Truy Cập",
+	SubTitle = "Xqhub",
+	TabWidth = 157,
+	Size = UDim2.fromOffset(450, 300),
+	Acrylic = true,
+	Theme = "Amethyst",
+	MinimizeKey = Enum.KeyCode.End
+})
+
+local Tabs = {
+	Main0 = Window:AddTab({ Title = "một số kênh🤓" }),
+	Main1 = Window:AddTab({ Title = "FARM Tiền $" }),
+	Main2 = Window:AddTab({ Title = "FARM BOSS 🤖" }),
+	Main3 = Window:AddTab({ Title = "PVP⚔️" }),
+	Main4 = Window:AddTab({ Title = "SHOP Bảo Trì" }),
+	Main5 = Window:AddTab({ Title = "FARM NPC" })
+}
+
+-----------------------------------------------------
+-- TAB 1
+-----------------------------------------------------
+Tabs.Main0:AddButton({
+	Title = "@xun.quyn15",
+	Description = "Sao chép link tiktok",
+	Callback = function()
+		setclipboard("https://www.tiktok.com/@xun.quyn15")
+	end
+})
+
+-----------------------------------------------------
+-- TAB 2 — ANTI AFK
+-----------------------------------------------------
+Tabs.Main1:AddButton({
+    Title = "ANTI AFK",
+    Description = "Không bị kick AFK 👍",
+    Callback = function()
+        local vu = game:GetService("VirtualUser")
+        local player = game.Players.LocalPlayer
+
+        task.spawn(function()
+            while true do
+                player.Idled:Wait()
+                vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end
+        end)
+
+        pcall(function()
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "ANTI AFK";
+                Text = "Anti AFK đã bật!";
+                Duration = 4;
+            })
+        end)
+    end
+})
+
+-----------------------------------------------------
+-- TAB 3 — FARM BOSS
+-----------------------------------------------------
+Tabs.Main2:AddButton({
+	Title = "Farm boss",
+	Description = "Nhấn để bật GUI farm boss",
+	Callback = function()
+
+-------- GUI FARM BOSS FULL --------
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "FarmBossGUI"
+
+local ToggleButton = Instance.new("ImageButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0,55,0,55)
+ToggleButton.Position = UDim2.new(0,20,0,200)
+ToggleButton.Image = "rbxassetid://3926307971"
+ToggleButton.BackgroundTransparency = 1
+
+local FarmBossMenu = Instance.new("Frame", ScreenGui)
+FarmBossMenu.Size = UDim2.new(0,420,0,360)
+FarmBossMenu.Position = UDim2.new(0.5,-210,0.5,-180)
+FarmBossMenu.BackgroundColor3 = Color3.fromRGB(40,40,40)
+FarmBossMenu.Visible = false
+FarmBossMenu.Active = true
+FarmBossMenu.Draggable = true
+Instance.new("UICorner", FarmBossMenu).CornerRadius = UDim.new(0,12)
+
+local Title = Instance.new("TextLabel", FarmBossMenu)
+Title.Size = UDim2.new(1,0,0,45)
+Title.Text = "FARM BOSS 👾"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 26
+Title.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local Close = Instance.new("TextButton", FarmBossMenu)
+Close.Size = UDim2.new(0,40,0,40)
+Close.Position = UDim2.new(1,-50,0,3)
+Close.Text = "✖"
+Close.TextColor3 = Color3.fromRGB(255,80,80)
+Close.BackgroundTransparency = 1
+
+local btn = Instance.new("TextButton", FarmBossMenu)
+btn.Size = UDim2.new(1,-40,0,50)
+btn.Position = UDim2.new(0,20,0,70)
+btn.Text = "Bật Script Farm Boss"
+btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+btn.TextSize = 22
+btn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+
+local hpLabel = Instance.new("TextLabel", FarmBossMenu)
+hpLabel.Size = UDim2.new(1,-40,0,35)
+hpLabel.Position = UDim2.new(0,20,0,130)
+hpLabel.Text = "Máu Boss: ..."
+hpLabel.Font = Enum.Font.GothamBold
+hpLabel.TextSize = 22
+hpLabel.BackgroundTransparency = 1
+hpLabel.TextColor3 = Color3.fromRGB(255,60,60)
+
+local function findBoss()
+    local near, dist = nil, math.huge
+    for _,m in ipairs(workspace:GetDescendants()) do
+        if m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
+            if m.Humanoid.Health > 0 then
+                local d=(m.HumanoidRootPart.Position-hrp.Position).Magnitude
+                if d<dist then near=m dist=d end
+            end
+        end
+    end
+    return near
+end
+
+local auto = false
+btn.MouseButton1Click:Connect(function()
+    auto = not auto
+    btn.Text = auto and "TẮT Script Farm Boss" or "Bật Script Farm Boss"
+
+    while auto do task.wait(0.05)
+        local b=findBoss()
+        if not b then hpLabel.Text="Không thấy Boss!" else
+            hpLabel.Text="Máu Boss: "..math.floor(b.Humanoid.Health)
+            hrp.CFrame=CFrame.new(b.HumanoidRootPart.Position+Vector3.new(0,25,0))
+            local tool=char:FindFirstChildOfClass("Tool")
+            if tool then tool:Activate() end
+        end
+    end
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    FarmBossMenu.Visible = not FarmBossMenu.Visible
+end)
+Close.MouseButton1Click:Connect(function()
+    FarmBossMenu.Visible = false
+end)
+
+-----------------------------------
+	end})
+end  -- END LoadMainUI
