@@ -1,292 +1,275 @@
--- Sigma Hub Studio (Fixed) — LocalScript (StarterPlayerScripts)
--- Dán vào StarterPlayerScripts
-
 repeat task.wait() until game:IsLoaded()
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-
-local player = Players.LocalPlayer
-if not player then
-    warn("SigmaHub: LocalPlayer not found. Make sure this is a LocalScript in StarterPlayerScripts.")
-    return
-end
-
-local playerGui = player:WaitForChild("PlayerGui", 5)
-if not playerGui then
-    warn("SigmaHub: PlayerGui not found.")
-    return
-end
-
-local KEY = "XQHUB123"
+-----------------------------
+-- THEME – TÍM NEON (B)
+-----------------------------
 local THEME = {
-    Main = Color3.fromRGB(8,180,100),
-    Dark = Color3.fromRGB(18,18,20),
-    Panel = Color3.fromRGB(28,28,32),
-    Accent = Color3.fromRGB(60,200,120),
-    Text = Color3.fromRGB(230,230,230)
+    Main = Color3.fromRGB(157, 0, 255),   -- màu header
+    Dark = Color3.fromRGB(20, 16, 24),    -- nền UI
+    Panel = Color3.fromRGB(30, 20, 40),   -- panel
+    Accent = Color3.fromRGB(140, 0, 200), -- nút
+    Accent2 = Color3.fromRGB(180, 0, 255),
+    Text = Color3.fromRGB(235,235,235)
 }
 
--- Helper: Create instance with parent and properties
-local function Create(parent, class, props)
+local KEY = "LUANSIGMA2025"
+
+local core = game:GetService("CoreGui")
+
+local function new(parent, class, props)
     local obj = Instance.new(class)
-    props = props or {}
-    for k,v in pairs(props) do
-        if k ~= "Parent" then
-            pcall(function() obj[k] = v end)
-        end
-    end
-    if parent then
-        obj.Parent = parent
-    elseif props.Parent then
-        obj.Parent = props.Parent
-    end
+    for k,v in pairs(props or {}) do obj[k] = v end
+    obj.Parent = parent
     return obj
 end
 
--- For debugging
-local function log(... ) print("[SigmaHub]", ...) end
+-----------------------------------------------------------
+-- KEY SYSTEM POPUP
+-----------------------------------------------------------
+local keyGui = new(core, "ScreenGui", {Name="SigmaKeyUI", ResetOnSpawn=false})
 
--- Remove old guis if present (helps during re-run in Studio)
-pcall(function()
-    local old = playerGui:FindFirstChild("SigmaHubGUI")
-    if old then old:Destroy() end
-    local oldkey = playerGui:FindFirstChild("SigmaKeyGUI")
-    if oldkey then oldkey:Destroy() end
-end)
-
--- Root ScreenGui (key panel placed in PlayerGui for Studio)
-local screen = Create(playerGui, "ScreenGui", {Name = "SigmaHubGUI", ResetOnSpawn = false})
-local keyGui = Create(playerGui, "ScreenGui", {Name = "SigmaKeyGUI", ResetOnSpawn = false})
-
--- MAIN UI (hidden until opened)
-local main = Create(screen, "Frame", {
-    Size = UDim2.new(0,520,0,380),
-    Position = UDim2.new(0.5, -260, 0.5, -190),
+local keyFrame = new(keyGui, "Frame", {
+    Size = UDim2.new(0,400,0,240),
+    Position = UDim2.new(0.5,-200,0.5,-120),
     BackgroundColor3 = THEME.Dark,
-    Active = true,
-    Draggable = true,
-    Visible = false
+    Active = true, Draggable = true
 })
-Create(main, "UICorner", {CornerRadius = UDim.new(0,14)})
-local header = Create(main, "Frame", {Size=UDim2.new(1,0,0,64), BackgroundColor3 = THEME.Main})
-Create(header, "UICorner", {CornerRadius = UDim.new(0,12)})
-Create(header, "TextLabel", {
-    Size = UDim2.new(1,0,1,0),
+new(keyFrame,"UICorner",{CornerRadius=UDim.new(0,14)})
+
+local keyTitle = new(keyFrame,"TextLabel",{
+    Size = UDim2.new(1,0,0,56),
+    BackgroundColor3 = THEME.Main,
+    Text = "🔐 Sigma Hub — Enter Key",
+    TextColor3 = Color3.new(1,1,1),
+    Font = Enum.Font.GothamBold, TextSize = 22
+})
+new(keyTitle,"UICorner",{CornerRadius=UDim.new(0,14)})
+
+local keyBox = new(keyFrame,"TextBox",{
+    Size = UDim2.new(1,-40,0,48),
+    Position = UDim2.new(0,20,0,80),
+    PlaceholderText = "Nhập key...",
+    TextColor3 = THEME.Text,
+    BackgroundColor3 = THEME.Panel,
+    Font = Enum.Font.Gotham, TextSize = 20
+})
+new(keyBox,"UICorner",{CornerRadius=UDim.new(0,10)})
+
+local keyBtn = new(keyFrame,"TextButton",{
+    Size = UDim2.new(1,-40,0,46),
+    Position = UDim2.new(0,20,0,140),
+    Text = "UNLOCK",
+    TextColor3 = Color3.new(1,1,1),
+    Font = Enum.Font.GothamBold, TextSize = 20,
+    BackgroundColor3 = THEME.Accent
+})
+new(keyBtn,"UICorner",{CornerRadius=UDim.new(0,10)})
+
+local keyMsg = new(keyFrame,"TextLabel",{
+    Size = UDim2.new(1,0,0,30),
+    Position = UDim2.new(0,0,1,-28),
     BackgroundTransparency = 1,
-    Text = "Sigma Hub — Studio (Safe)",
+    Text = "",
+    TextColor3 = Color3.fromRGB(255,80,80),
     Font = Enum.Font.GothamBold,
-    TextSize = 20,
-    TextColor3 = Color3.new(1,1,1)
+    TextSize = 18
 })
 
--- Sidebar + content
-local sidebar = Create(main, "Frame", {Size=UDim2.new(0,140,1,-64), Position = UDim2.new(0,0,0,64), BackgroundColor3 = THEME.Panel})
-Create(sidebar, "UICorner", {CornerRadius = UDim.new(0,10)})
-local content = Create(main, "Frame", {Size = UDim2.new(1,-140,1,-64), Position = UDim2.new(0,140,0,64), BackgroundTransparency = 1})
+-----------------------------
+-- LOAD MAIN SIGMA UI
+-----------------------------
+local function LoadSigma()
+    if core:FindFirstChild("SigmaMainUI") then return end
 
--- Tabs
-local tabNames = {"Home","Player","AntiAFK","System"}
-local pages = {}
-for i,name in ipairs(tabNames) do
-    local btn = Create(sidebar, "TextButton", {
-        Size = UDim2.new(1,-20,0,52),
-        Position = UDim2.new(0,10,0,12 + (i-1)*62),
-        Text = name,
-        Font = Enum.Font.GothamSemibold,
-        TextSize = 18,
-        BackgroundColor3 = Color3.fromRGB(36,36,36),
-        TextColor3 = THEME.Text
-    })
-    Create(btn, "UICorner", {CornerRadius = UDim.new(0,8)})
-    local page = Create(content, "Frame", {
-        Size = UDim2.new(1,-20,1,-20),
-        Position = UDim2.new(0,10,0,10),
-        BackgroundTransparency = 1,
-        Visible = (i==1)
-    })
-    pages[name] = page
-    btn.MouseButton1Click:Connect(function()
-        for _,pg in pairs(pages) do pg.Visible = false end
-        page.Visible = true
-    end)
-end
+    local mainUI = new(core,"ScreenGui",{Name="SigmaMainUI", ResetOnSpawn=false})
 
--- HOME page
-do
-    local p = pages.Home
-    Create(p, "TextLabel", {
-        Parent = p,
-        Text = "Welcome to Sigma Hub (Studio)",
-        Size = UDim2.new(1,0,0,36),
-        BackgroundColor3 = Color3.fromRGB(26,26,28),
+    -- Nút Σ mini toggle
+    local mini = new(mainUI,"ImageButton",{
+        Size = UDim2.new(0,50,0,50),
+        Position = UDim2.new(0.03,0,0.2,0),
+        BackgroundColor3 = THEME.Panel
+    })
+    new(mini,"UICorner",{CornerRadius=UDim.new(1,12)})
+    new(mini,"TextLabel",{
+        Size=UDim2.new(1,0,1,0),
+        BackgroundTransparency=1,
+        Text="Σ",
         TextColor3 = THEME.Text,
-        Font = Enum.Font.GothamBold,
-        TextSize = 16
+        Font=Enum.Font.GothamBold,
+        TextSize=26
     })
-    Create(p, "TextLabel", {
-        Parent = p,
-        Text = "Phiên bản Studio an toàn — dùng cho game bạn phát triển.",
-        Size = UDim2.new(1,0,0,50),
-        Position = UDim2.new(0,0,0,46),
-        BackgroundTransparency = 1,
-        TextColor3 = THEME.Text,
-        Font = Enum.Font.Gotham,
-        TextSize = 14
+
+    -- MAIN WINDOW
+    local win = new(mainUI,"Frame",{
+        Size = UDim2.new(0,520,0,380),
+        Position = UDim2.new(0.5,-260,0.5,-190),
+        BackgroundColor3 = THEME.Dark,
+        Visible = false,
+        Active=true, Draggable=true
     })
-end
+    new(win,"UICorner",{CornerRadius=UDim.new(0,14)})
 
--- PLAYER page
-do
-    local p = pages.Player
-    Create(p, "TextLabel", {Parent=p, Text="WalkSpeed", Size=UDim2.new(0.3,0,0,24), Position=UDim2.new(0,8,0,8), BackgroundTransparency=1, TextColor3=THEME.Text})
-    local wsBox = Create(p, "TextBox", {Parent=p, PlaceholderText="16", Size=UDim2.new(0.3,0,0,34), Position=UDim2.new(0,8,0,36), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
-    local wsBtn = Create(p, "TextButton", {Parent=p, Text="Set", Size=UDim2.new(0.2,0,0,34), Position=UDim2.new(0.32,12,0,36), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
-    Create(p, "TextLabel", {Parent=p, Text="JumpPower", Size=UDim2.new(0.3,0,0,24), Position=UDim2.new(0,8,0,88), BackgroundTransparency=1, TextColor3=THEME.Text})
-    local jpBox = Create(p, "TextBox", {Parent=p, PlaceholderText="50", Size=UDim2.new(0.3,0,0,34), Position=UDim2.new(0,8,0,116), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
-    local jpBtn = Create(p, "TextButton", {Parent=p, Text="Set", Size=UDim2.new(0.2,0,0,34), Position=UDim2.new(0.32,12,0,116), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
-    local resetBtn = Create(p, "TextButton", {Parent=p, Text="Reset Character", Size=UDim2.new(0.5,0,0,36), Position=UDim2.new(0,8,0,170), BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=THEME.Text})
+    -- HEADER
+    local header = new(win,"Frame",{
+        Size = UDim2.new(1,0,0,64),
+        BackgroundColor3 = THEME.Main
+    })
+    new(header,"UICorner",{CornerRadius=UDim.new(0,14)})
+    new(header,"TextLabel",{
+        BackgroundTransparency=1,
+        Size=UDim2.new(1,0,1,0),
+        Text="Sigma Hub — Neon Purple",
+        Font=Enum.Font.GothamBold,
+        TextColor3 = Color3.new(1,1,1),
+        TextSize=22
+    })
 
-    local function getHumanoid()
-        local ch = player.Character or player.CharacterAdded:Wait()
-        return ch:FindFirstChildOfClass("Humanoid")
-    end
+    --------------------------------------------------
+    -- SIDEBAR
+    --------------------------------------------------
+    local sidebar = new(win,"Frame",{
+        Size = UDim2.new(0,130,1,-64),
+        Position = UDim2.new(0,0,0,64),
+        BackgroundColor3 = THEME.Panel
+    })
+    new(sidebar,"UICorner",{CornerRadius=UDim.new(0,10)})
 
-    wsBtn.MouseButton1Click:Connect(function()
-        local v = tonumber(wsBox.Text)
-        local h = getHumanoid()
-        if v and h then
-            pcall(function() h.WalkSpeed = v end)
-        else
-            warn("SigmaHub: invalid WalkSpeed or humanoid missing.")
-        end
-    end)
-    jpBtn.MouseButton1Click:Connect(function()
-        local v = tonumber(jpBox.Text)
-        local h = getHumanoid()
-        if v and h then pcall(function() h.JumpPower = v end) else warn("SigmaHub: invalid JumpPower or humanoid missing.") end
-    end)
-    resetBtn.MouseButton1Click:Connect(function()
-        local ch = player.Character
-        if ch then pcall(function() ch:BreakJoints() end) end
-    end)
-end
+    local content = new(win,"Frame",{
+        Size = UDim2.new(1,-130,1,-64),
+        Position = UDim2.new(0,130,0,64),
+        BackgroundColor3 = THEME.Dark
+    })
+    new(content,"UICorner",{CornerRadius=UDim.new(0,10)})
 
--- ANTI AFK page (safe)
-do
-    local p = pages.AntiAFK
-    Create(p, "TextLabel", {Parent=p, Text="Anti AFK (Safe)", Size=UDim2.new(1,0,0,30), BackgroundTransparency=1, TextColor3=THEME.Text, Font=Enum.Font.GothamBold, TextSize=16})
-    local afkLabel = Create(p, "TextLabel", {Parent=p, Text="AFK: 0s", Size=UDim2.new(1,0,0,30), Position=UDim2.new(0,0,0,36), BackgroundTransparency=1, TextColor3=THEME.Text})
-    local totalLabel = Create(p, "TextLabel", {Parent=p, Text="Tổng AFK: 0 phút", Size=UDim2.new(1,0,0,24), Position=UDim2.new(0,0,0,72), BackgroundTransparency=1, TextColor3=Color3.fromRGB(200,200,200)})
-    local fpsLabel = Create(p, "TextLabel", {Parent=p, Text="FPS: ...", Size=UDim2.new(0.4,0,0,24), Position=UDim2.new(0,0,0,110), BackgroundTransparency=1, TextColor3=THEME.Text})
-    local afkToggle = Create(p, "TextButton", {Parent=p, Text="Enable AFK Mover", Size=UDim2.new(0.46,0,0,36), Position=UDim2.new(0,0,0,140), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
-    local tpToggle = Create(p, "TextButton", {Parent=p, Text="Toggle Auto Teleport", Size=UDim2.new(0.46,0,0,36), Position=UDim2.new(0.5,8,0,140), BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=THEME.Text})
+    --------------------------------------------------
+    -- TAB SYSTEM
+    --------------------------------------------------
+    local tabs = {}
+    local currentTab = nil
 
-    local afkMoving = false
-    local autoTP = false
-    local AFK_seconds = 0
-    local AFK_minutes_total = 0
+    local function createTab(name)
+        local btn = new(sidebar,"TextButton",{
+            Size = UDim2.new(1,-10,0,46),
+            Position = UDim2.new(0,5,0,#tabs*52+8),
+            BackgroundColor3 = THEME.Accent,
+            Text = name,
+            TextColor3 = Color3.new(1,1,1),
+            Font = Enum.Font.GothamBold,
+            TextSize = 18
+        })
+        new(btn,"UICorner",{CornerRadius=UDim.new(0,10)})
 
-    -- FPS via RenderStepped counting
-    do
-        local frameCount = 0
-        RunService.RenderStepped:Connect(function() frameCount = frameCount + 1 end)
-        task.spawn(function()
-            while task.wait(1) do
-                fpsLabel.Text = "FPS: "..tostring(frameCount)
-                frameCount = 0
-            end
+        local page = new(content,"Frame",{
+            Size = UDim2.new(1,0,1,0),
+            BackgroundTransparency = 1,
+            Visible = false
+        })
+
+        tabs[name] = {button=btn, page=page}
+
+        btn.MouseButton1Click:Connect(function()
+            if currentTab then currentTab.Visible = false end
+            page.Visible = true
+            currentTab = page
         end)
+
+        return page
     end
 
-    task.spawn(function()
-        while task.wait(1) do
-            AFK_seconds = AFK_seconds + 1
-            if AFK_seconds % 60 == 0 then AFK_minutes_total = AFK_minutes_total + 1 end
-            afkLabel.Text = "AFK: "..AFK_seconds.."s"
-            totalLabel.Text = "Tổng AFK: "..AFK_minutes_total.." phút"
+    --------------------------------------------------
+    -- TAB: HOME
+    --------------------------------------------------
+    local Home = createTab("HOME")
+    new(Home,"TextLabel",{
+        Size=UDim2.new(1,0,0,60),
+        Text="Chào mừng đến Sigma Hub!",
+        TextColor3=THEME.Text,
+        BackgroundTransparency=1,
+        Font=Enum.Font.GothamBold,
+        TextSize=26
+    })
 
-            if afkMoving and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = player.Character.HumanoidRootPart
-                local dest = hrp.Position + Vector3.new((math.random()-0.5)*2,0,(math.random()-0.5)*2)
-                pcall(function()
-                    local h = player.Character:FindFirstChildOfClass("Humanoid")
-                    if h then
-                        h:MoveTo(dest)
-                    else
-                        hrp.CFrame = hrp.CFrame * CFrame.new((math.random()-0.5)*0.5,0,(math.random()-0.5)*0.5)
-                    end
-                end)
-            end
-        end
-    end)
+    --------------------------------------------------
+    -- TAB: PLAYER
+    --------------------------------------------------
+    local Player = createTab("PLAYER")
+    new(Player,"TextLabel",{
+        Position=UDim2.new(0,10,0,10),
+        Size=UDim2.new(1,0,0,35),
+        Text="Player Tools",
+        BackgroundTransparency=1,
+        TextColor3=THEME.Text,
+        Font=Enum.Font.GothamBold,
+        TextSize=22
+    })
 
-    afkToggle.MouseButton1Click:Connect(function()
-        afkMoving = not afkMoving
-        afkToggle.Text = afkMoving and "Disable AFK Mover" or "Enable AFK Mover"
-        afkToggle.BackgroundColor3 = afkMoving and Color3.fromRGB(200,80,80) or THEME.Accent
-    end)
+    --------------------------------------------------
+    -- TAB: PVP
+    --------------------------------------------------
+    local PvP = createTab("PVP")
+    new(PvP,"TextLabel",{
+        Position=UDim2.new(0,10,0,10),
+        Size=UDim2.new(1,0,0,35),
+        Text="PvP Menu",
+        BackgroundTransparency=1,
+        TextColor3=THEME.Text,
+        Font=Enum.Font.GothamBold,
+        TextSize=22
+    })
 
-    local function showTeleportNotification(text)
-        local notif = Create(screen, "Frame", {Size = UDim2.new(0,220,0,40), Position = UDim2.new(0.5,-110,0.12,0), BackgroundColor3 = THEME.Panel})
-        Create(notif, "UICorner", {CornerRadius = UDim.new(0,8)})
-        Create(notif, "TextLabel", {Parent = notif, Text = text, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, TextColor3 = THEME.Text, Font = Enum.Font.GothamBold})
-        local tIn = TweenService:Create(notif, TweenInfo.new(0.18), {Position = UDim2.new(0.5,-110,0.1,0)})
-        tIn:Play()
-        task.delay(2, function()
-            pcall(function() notif:Destroy() end)
-        end)
-    end
+    --------------------------------------------------
+    -- TAB: ANTI AFK
+    --------------------------------------------------
+    local Anti = createTab("ANTI AFK")
 
-    tpToggle.MouseButton1Click:Connect(function()
-        autoTP = not autoTP
-        tpToggle.Text = autoTP and "AutoTP: ON" or "Toggle Auto Teleport"
-        tpToggle.BackgroundColor3 = autoTP and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60)
-        if autoTP then
-            showTeleportNotification("Auto Teleport bật — Teleport OK")
-            task.spawn(function()
-                while autoTP do
-                    task.wait(5)
-                    if not autoTP then break end
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local hrp = player.Character.HumanoidRootPart
-                        local destPart = workspace:FindFirstChild("TeleportPoint")
-                        if destPart and destPart:IsA("BasePart") then
-                            hrp.CFrame = destPart.CFrame + Vector3.new(0,3,0)
-                        else
-                            hrp.CFrame = hrp.CFrame * CFrame.new(0,3,0)
-                        end
-                        showTeleportNotification("📌 Teleport OK")
-                    end
-                end
+    local antiBtn = new(Anti,"TextButton",{
+        Size=UDim2.new(0,250,0,50),
+        Position=UDim2.new(0,20,0,40),
+        BackgroundColor3=THEME.Accent,
+        Text="Bật Anti AFK",
+        TextColor3=Color3.new(1,1,1),
+        Font=Enum.Font.GothamBold,
+        TextSize=22
+    })
+    new(antiBtn,"UICorner",{CornerRadius=UDim.new(0,12)})
+
+    local afkEnabled = false
+
+    antiBtn.MouseButton1Click:Connect(function()
+        afkEnabled = not afkEnabled
+        antiBtn.Text = afkEnabled and "Anti AFK: ON" or "Anti AFK: OFF"
+
+        if afkEnabled then
+            local vu = game:GetService("VirtualUser")
+            game.Players.LocalPlayer.Idled:Connect(function()
+                vu:Button2Down(Vector2.new(),workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(),workspace.CurrentCamera.CFrame)
             end)
         end
     end)
+
+    --------------------------------------------------
+    -- TOGGLE MENU
+    --------------------------------------------------
+    mini.MouseButton1Click:Connect(function()
+        win.Visible = not win.Visible
+    end)
+
+    tabs["HOME"].page.Visible = true
+    currentTab = tabs["HOME"].page
 end
 
--- MINI open button
-local openMini = Create(playerGui, "TextButton", {Size = UDim2.new(0,44,0,44), Position = UDim2.new(0.02,0,0.85,0), Text = "Σ", BackgroundColor3 = THEME.Panel, TextColor3 = THEME.Text})
-Create(openMini, "UICorner", {CornerRadius = UDim.new(1,8)})
-openMini.MouseButton1Click:Connect(function() main.Visible = not main.Visible end)
-
--- Simple key panel to open GUI (Studio friendly)
-local keyPanel = Create(playerGui, "Frame", {Size = UDim2.new(0,300,0,110), Position = UDim2.new(0.5,-150,0.85,0), BackgroundColor3 = THEME.Panel})
-Create(keyPanel, "UICorner", {CornerRadius = UDim.new(0,8)})
-Create(keyPanel, "TextLabel", {Parent=keyPanel, Text="Enter Key to open UI", Size=UDim2.new(1,0,0,24), BackgroundTransparency=1, TextColor3=THEME.Text})
-local kBox = Create(keyPanel, "TextBox", {Parent=keyPanel, PlaceholderText="Key here...", Size=UDim2.new(1,-24,0,36), Position=UDim2.new(0,12,0,30), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
-local kBtn = Create(keyPanel, "TextButton", {Parent=keyPanel, Text="Open", Size=UDim2.new(0.4,0,0,30), Position=UDim2.new(0.3,0,0,72), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
-kBtn.MouseButton1Click:Connect(function()
-    if kBox.Text == KEY then
-        kBox.Text = ""
-        keyPanel:Destroy()
-        main.Visible = true
+-----------------------------------------------------------
+-- KEY CHECK
+-----------------------------------------------------------
+keyBtn.MouseButton1Click:Connect(function()
+    if keyBox.Text == KEY then
+        keyMsg.Text = "✔ Đúng key!"
+        task.wait(0.2)
+        keyGui:Destroy()
+        LoadSigma()
     else
-        kBox.Text = ""
-        local orig = kBtn.BackgroundColor3
-        kBtn.BackgroundColor3 = Color3.fromRGB(200,80,80)
-        task.delay(0.25, function() if kBtn and kBtn.Parent then kBtn.BackgroundColor3 = orig end end)
+        keyMsg.Text = "❌ Sai key!"
     end
 end)
-
-log("SigmaHub: UI created. Press Open button or type correct key to show.")
