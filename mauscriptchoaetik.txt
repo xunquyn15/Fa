@@ -1,275 +1,76 @@
 repeat task.wait() until game:IsLoaded()
 
------------------------------
--- THEME – TÍM NEON (B)
------------------------------
-local THEME = {
-    Main = Color3.fromRGB(157, 0, 255),   -- màu header
-    Dark = Color3.fromRGB(20, 16, 24),    -- nền UI
-    Panel = Color3.fromRGB(30, 20, 40),   -- panel
-    Accent = Color3.fromRGB(140, 0, 200), -- nút
-    Accent2 = Color3.fromRGB(180, 0, 255),
-    Text = Color3.fromRGB(235,235,235)
-}
+--=============================
+-- ⚠️ KEY SYSTEM
+--=============================
+local CORRECT_KEY = "XQZHUB88"
+local CoreGui = game:GetService("CoreGui")
 
-local KEY = "LUANSIGMA2025"
+local KeyUI = Instance.new("ScreenGui")
+KeyUI.Name = "MQTC_KeySystem"
+KeyUI.Parent = CoreGui
 
-local core = game:GetService("CoreGui")
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 380, 0, 220)
+Frame.Position = UDim2.new(0.5, -190, 0.5, -110)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.Parent = KeyUI
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
 
-local function new(parent, class, props)
-    local obj = Instance.new(class)
-    for k,v in pairs(props or {}) do obj[k] = v end
-    obj.Parent = parent
-    return obj
-end
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "🔐 MẤT QUYỀN TRUY CẬP — KEY SYSTEM"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
 
------------------------------------------------------------
--- KEY SYSTEM POPUP
------------------------------------------------------------
-local keyGui = new(core, "ScreenGui", {Name="SigmaKeyUI", ResetOnSpawn=false})
+local Box = Instance.new("TextBox", Frame)
+Box.Size = UDim2.new(1, -40, 0, 40)
+Box.Position = UDim2.new(0, 20, 0, 60)
+Box.PlaceholderText = "Nhập key: XQZHUB88"
+Box.Text = ""
+Box.Font = Enum.Font.Gotham
+Box.TextSize = 16
+Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+Box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Box.Parent = Frame
+Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 10)
 
-local keyFrame = new(keyGui, "Frame", {
-    Size = UDim2.new(0,400,0,240),
-    Position = UDim2.new(0.5,-200,0.5,-120),
-    BackgroundColor3 = THEME.Dark,
-    Active = true, Draggable = true
-})
-new(keyFrame,"UICorner",{CornerRadius=UDim.new(0,14)})
+local Btn = Instance.new("TextButton", Frame)
+Btn.Size = UDim2.new(1, -40, 0, 45)
+Btn.Position = UDim2.new(0, 20, 0, 120)
+Btn.Text = "🔓 Unlock Hub"
+Btn.Font = Enum.Font.GothamBold
+Btn.TextSize = 18
+Btn.TextColor3 = Color3.new(1,1,1)
+Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 40)
+Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
 
-local keyTitle = new(keyFrame,"TextLabel",{
-    Size = UDim2.new(1,0,0,56),
-    BackgroundColor3 = THEME.Main,
-    Text = "🔐 Sigma Hub — Enter Key",
-    TextColor3 = Color3.new(1,1,1),
-    Font = Enum.Font.GothamBold, TextSize = 22
-})
-new(keyTitle,"UICorner",{CornerRadius=UDim.new(0,14)})
+local Status = Instance.new("TextLabel", Frame)
+Status.Size = UDim2.new(1, 0, 0, 35)
+Status.Position = UDim2.new(0, 0, 0, 170)
+Status.BackgroundTransparency = 1
+Status.TextColor3 = Color3.fromRGB(255, 80, 80)
+Status.Font = Enum.Font.GothamBold
+Status.TextSize = 16
+Status.Text = ""
 
-local keyBox = new(keyFrame,"TextBox",{
-    Size = UDim2.new(1,-40,0,48),
-    Position = UDim2.new(0,20,0,80),
-    PlaceholderText = "Nhập key...",
-    TextColor3 = THEME.Text,
-    BackgroundColor3 = THEME.Panel,
-    Font = Enum.Font.Gotham, TextSize = 20
-})
-new(keyBox,"UICorner",{CornerRadius=UDim.new(0,10)})
+--=============================
+-- 🧪 CHECK KEY
+--=============================
+Btn.MouseButton1Click:Connect(function()
+    if Box.Text == CORRECT_KEY then
+        Status.TextColor3 = Color3.fromRGB(80,255,80)
+        Status.Text = "✔ Thành công! Đang mở HUB..."
 
-local keyBtn = new(keyFrame,"TextButton",{
-    Size = UDim2.new(1,-40,0,46),
-    Position = UDim2.new(0,20,0,140),
-    Text = "UNLOCK",
-    TextColor3 = Color3.new(1,1,1),
-    Font = Enum.Font.GothamBold, TextSize = 20,
-    BackgroundColor3 = THEME.Accent
-})
-new(keyBtn,"UICorner",{CornerRadius=UDim.new(0,10)})
+        task.wait(0.8)
+        KeyUI:Destroy()
 
-local keyMsg = new(keyFrame,"TextLabel",{
-    Size = UDim2.new(1,0,0,30),
-    Position = UDim2.new(0,0,1,-28),
-    BackgroundTransparency = 1,
-    Text = "",
-    TextColor3 = Color3.fromRGB(255,80,80),
-    Font = Enum.Font.GothamBold,
-    TextSize = 18
-})
-
------------------------------
--- LOAD MAIN SIGMA UI
------------------------------
-local function LoadSigma()
-    if core:FindFirstChild("SigmaMainUI") then return end
-
-    local mainUI = new(core,"ScreenGui",{Name="SigmaMainUI", ResetOnSpawn=false})
-
-    -- Nút Σ mini toggle
-    local mini = new(mainUI,"ImageButton",{
-        Size = UDim2.new(0,50,0,50),
-        Position = UDim2.new(0.03,0,0.2,0),
-        BackgroundColor3 = THEME.Panel
-    })
-    new(mini,"UICorner",{CornerRadius=UDim.new(1,12)})
-    new(mini,"TextLabel",{
-        Size=UDim2.new(1,0,1,0),
-        BackgroundTransparency=1,
-        Text="Σ",
-        TextColor3 = THEME.Text,
-        Font=Enum.Font.GothamBold,
-        TextSize=26
-    })
-
-    -- MAIN WINDOW
-    local win = new(mainUI,"Frame",{
-        Size = UDim2.new(0,520,0,380),
-        Position = UDim2.new(0.5,-260,0.5,-190),
-        BackgroundColor3 = THEME.Dark,
-        Visible = false,
-        Active=true, Draggable=true
-    })
-    new(win,"UICorner",{CornerRadius=UDim.new(0,14)})
-
-    -- HEADER
-    local header = new(win,"Frame",{
-        Size = UDim2.new(1,0,0,64),
-        BackgroundColor3 = THEME.Main
-    })
-    new(header,"UICorner",{CornerRadius=UDim.new(0,14)})
-    new(header,"TextLabel",{
-        BackgroundTransparency=1,
-        Size=UDim2.new(1,0,1,0),
-        Text="Sigma Hub — Neon Purple",
-        Font=Enum.Font.GothamBold,
-        TextColor3 = Color3.new(1,1,1),
-        TextSize=22
-    })
-
-    --------------------------------------------------
-    -- SIDEBAR
-    --------------------------------------------------
-    local sidebar = new(win,"Frame",{
-        Size = UDim2.new(0,130,1,-64),
-        Position = UDim2.new(0,0,0,64),
-        BackgroundColor3 = THEME.Panel
-    })
-    new(sidebar,"UICorner",{CornerRadius=UDim.new(0,10)})
-
-    local content = new(win,"Frame",{
-        Size = UDim2.new(1,-130,1,-64),
-        Position = UDim2.new(0,130,0,64),
-        BackgroundColor3 = THEME.Dark
-    })
-    new(content,"UICorner",{CornerRadius=UDim.new(0,10)})
-
-    --------------------------------------------------
-    -- TAB SYSTEM
-    --------------------------------------------------
-    local tabs = {}
-    local currentTab = nil
-
-    local function createTab(name)
-        local btn = new(sidebar,"TextButton",{
-            Size = UDim2.new(1,-10,0,46),
-            Position = UDim2.new(0,5,0,#tabs*52+8),
-            BackgroundColor3 = THEME.Accent,
-            Text = name,
-            TextColor3 = Color3.new(1,1,1),
-            Font = Enum.Font.GothamBold,
-            TextSize = 18
-        })
-        new(btn,"UICorner",{CornerRadius=UDim.new(0,10)})
-
-        local page = new(content,"Frame",{
-            Size = UDim2.new(1,0,1,0),
-            BackgroundTransparency = 1,
-            Visible = false
-        })
-
-        tabs[name] = {button=btn, page=page}
-
-        btn.MouseButton1Click:Connect(function()
-            if currentTab then currentTab.Visible = false end
-            page.Visible = true
-            currentTab = page
-        end)
-
-        return page
-    end
-
-    --------------------------------------------------
-    -- TAB: HOME
-    --------------------------------------------------
-    local Home = createTab("HOME")
-    new(Home,"TextLabel",{
-        Size=UDim2.new(1,0,0,60),
-        Text="Chào mừng đến Sigma Hub!",
-        TextColor3=THEME.Text,
-        BackgroundTransparency=1,
-        Font=Enum.Font.GothamBold,
-        TextSize=26
-    })
-
-    --------------------------------------------------
-    -- TAB: PLAYER
-    --------------------------------------------------
-    local Player = createTab("PLAYER")
-    new(Player,"TextLabel",{
-        Position=UDim2.new(0,10,0,10),
-        Size=UDim2.new(1,0,0,35),
-        Text="Player Tools",
-        BackgroundTransparency=1,
-        TextColor3=THEME.Text,
-        Font=Enum.Font.GothamBold,
-        TextSize=22
-    })
-
-    --------------------------------------------------
-    -- TAB: PVP
-    --------------------------------------------------
-    local PvP = createTab("PVP")
-    new(PvP,"TextLabel",{
-        Position=UDim2.new(0,10,0,10),
-        Size=UDim2.new(1,0,0,35),
-        Text="PvP Menu",
-        BackgroundTransparency=1,
-        TextColor3=THEME.Text,
-        Font=Enum.Font.GothamBold,
-        TextSize=22
-    })
-
-    --------------------------------------------------
-    -- TAB: ANTI AFK
-    --------------------------------------------------
-    local Anti = createTab("ANTI AFK")
-
-    local antiBtn = new(Anti,"TextButton",{
-        Size=UDim2.new(0,250,0,50),
-        Position=UDim2.new(0,20,0,40),
-        BackgroundColor3=THEME.Accent,
-        Text="Bật Anti AFK",
-        TextColor3=Color3.new(1,1,1),
-        Font=Enum.Font.GothamBold,
-        TextSize=22
-    })
-    new(antiBtn,"UICorner",{CornerRadius=UDim.new(0,12)})
-
-    local afkEnabled = false
-
-    antiBtn.MouseButton1Click:Connect(function()
-        afkEnabled = not afkEnabled
-        antiBtn.Text = afkEnabled and "Anti AFK: ON" or "Anti AFK: OFF"
-
-        if afkEnabled then
-            local vu = game:GetService("VirtualUser")
-            game.Players.LocalPlayer.Idled:Connect(function()
-                vu:Button2Down(Vector2.new(),workspace.CurrentCamera.CFrame)
-                task.wait(1)
-                vu:Button2Up(Vector2.new(),workspace.CurrentCamera.CFrame)
-            end)
-        end
-    end)
-
-    --------------------------------------------------
-    -- TOGGLE MENU
-    --------------------------------------------------
-    mini.MouseButton1Click:Connect(function()
-        win.Visible = not win.Visible
-    end)
-
-    tabs["HOME"].page.Visible = true
-    currentTab = tabs["HOME"].page
-end
-
------------------------------------------------------------
--- KEY CHECK
------------------------------------------------------------
-keyBtn.MouseButton1Click:Connect(function()
-    if keyBox.Text == KEY then
-        keyMsg.Text = "✔ Đúng key!"
-        task.wait(0.2)
-        keyGui:Destroy()
-        LoadSigma()
+        -- Load UI chính sau khi mở key
+        loadstring(game:HttpGet("https://pastebin.com/raw/MQTCHUB_MAIN"))()
     else
-        keyMsg.Text = "❌ Sai key!"
+        Status.TextColor3 = Color3.fromRGB(255,80,80)
+        Status.Text = "❌ Key Sai! Hãy thử lại!"
     end
 end)
