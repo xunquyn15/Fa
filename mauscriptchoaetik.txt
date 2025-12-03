@@ -1,76 +1,481 @@
+-- FULL: Key System + LoadMainUI + Fluent + Giao diện đẹp + Farm Boss + Farm Money + PvP + Farm NPC
+-- Dán vào executor hoặc StarterPlayerScripts (LocalScript)
+
 repeat task.wait() until game:IsLoaded()
 
---=============================
--- ⚠️ KEY SYSTEM
---=============================
-local CORRECT_KEY = "XQZHUB88"
-local CoreGui = game:GetService("CoreGui")
+-- =========================
+-- HÀM LoadMainUI (định nghĩa TRƯỚC)
+-- =========================
+local function LoadMainUI()
+    -- tạo 1 screen gui riêng cho main UI
+    local coreGui = game:GetService("CoreGui")
 
-local KeyUI = Instance.new("ScreenGui")
-KeyUI.Name = "MQTC_KeySystem"
-KeyUI.Parent = CoreGui
+    -- nút mở nhỏ (độc lập)
+    local toggleGui = Instance.new("ScreenGui")
+    toggleGui.Name = "TeoToggleGui"
+    toggleGui.ResetOnSpawn = false
+    toggleGui.Parent = coreGui
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 380, 0, 220)
-Frame.Position = UDim2.new(0.5, -190, 0.5, -110)
-Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Frame.Parent = KeyUI
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+    local openBtn = Instance.new("ImageButton", toggleGui)
+    openBtn.Size = UDim2.new(0,40,0,40)
+    openBtn.Position = UDim2.new(0.06,0,0.18,0)
+    openBtn.AnchorPoint = Vector2.new(0,0)
+    openBtn.Image = "http://www.roblox.com/asset/?id=76121098594454"
+    openBtn.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    openBtn.AutoButtonColor = false
+    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
+
+    openBtn.MouseButton1Down:Connect(function()
+        pcall(function()
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+        end)
+    end)
+
+    -- load Fluent (nếu không muốn dùng Fluent, phần UI bên dưới vẫn hoạt động)
+    local ok, Fluent = pcall(function()
+        return loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+    end)
+    if not ok or not Fluent then
+        -- nếu Fluent không load được, tiếp tục với UI nội bộ
+        Fluent = nil
+    end
+
+    -- Nếu Fluent có, tạo window Fluent và Tabs; nếu không, tạo bảng Tabs giả (để code sau vẫn chạy)
+    local Window, Tabs
+    if Fluent then
+        Window = Fluent:CreateWindow({
+            Title = "TÉO HUB 🍎",
+            SubTitle = "TeoHub",
+            TabWidth = 157,
+            Size = UDim2.fromOffset(540, 340),
+            Acrylic = true,
+            Theme = "Amethyst",
+            MinimizeKey = Enum.KeyCode.End
+        })
+        Tabs = {
+            Main0 = Window:AddTab({ Title = "Info" }),
+            Main1 = Window:AddTab({ Title = "FARM Tiền $" }),
+    
+            Main3 = Window:AddTab({ Title = "PVP⚔️" }),
+     
+        -- fallback: tạo object Tabs table rỗng với AddButton stub
+        Tabs = {}
+        local function stub() 
+            local t = {}
+            function t:AddButton(args) end
+            return t
+        end
+        Tabs.Main0 = stub(); Tabs.Main1 = stub(); Tabs.Main2 = stub(); Tabs.Main3 = stub(); Tabs.Main4 = stub(); Tabs.Main5 = stub()
+    end
+
+    -- =========================
+    -- HÀM TẠO CỬA SỔ ĐẸP (dùng cho menus khi Fluent k active)
+    -- =========================
+    local function CreateFluentWindowLocal(title, emoji)
+        local gui = Instance.new("ScreenGui", coreGui)
+        gui.ResetOnSpawn = false
+        gui.Name = title .. "_GUI"
+
+        local Main = Instance.new("Frame", gui)
+        Main.Size = UDim2.new(0, 460, 0, 380)
+        Main.Position = UDim2.new(0.5, -230, 0.5, -190)
+        Main.AnchorPoint = Vector2.new(0.5,0.5)
+        Main.BackgroundColor3 = Color3.fromRGB(28,28,28)
+        Main.BorderSizePixel = 0
+        Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
+
+        -- shadow (subtle)
+        local shadow = Instance.new("ImageLabel", Main)
+        shadow.Size = UDim2.new(1.12, 0, 1.12, 0)
+        shadow.Position = UDim2.new(-0.06, 0, -0.06, 0)
+        shadow.BackgroundTransparency = 1
+        shadow.Image = "rbxassetid://6015897843"
+        shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+        shadow.ImageTransparency = 0.75
+        shadow.ZIndex = 0
+
+        local top = Instance.new("Frame", Main)
+        top.Size = UDim2.new(1,0,0,60)
+        top.Position = UDim2.new(0,0,0,0)
+        top.BackgroundColor3 = Color3.fromRGB(45,20,90)
+        Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
+
+        local titleLbl = Instance.new("TextLabel", top)
+        titleLbl.Size = UDim2.new(1,-80,1,0)
+        titleLbl.Position = UDim2.new(0,16,0,0)
+        titleLbl.BackgroundTransparency = 1
+        titleLbl.Text = (emoji or "") .. "  " .. title
+        titleLbl.Font = Enum.Font.GothamBlack
+        titleLbl.TextSize = 24
+        titleLbl.TextColor3 = Color3.fromRGB(255,255,255)
+
+        local btnClose = Instance.new("TextButton", top)
+        btnClose.Size = UDim2.new(0,44,0,44)
+        btnClose.Position = UDim2.new(1,-56,0,8)
+        btnClose.BackgroundTransparency = 1
+        btnClose.Text = "✖"
+        btnClose.Font = Enum.Font.GothamBold
+        btnClose.TextSize = 22
+        btnClose.TextColor3 = Color3.fromRGB(255,140,140)
+        btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+        local body = Instance.new("Frame", Main)
+        body.Size = UDim2.new(1,-20,1,-80)
+        body.Position = UDim2.new(0,10,0,70)
+        body.BackgroundColor3 = Color3.fromRGB(22,22,28)
+        Instance.new("UICorner", body).CornerRadius = UDim.new(0,10)
+
+        return gui, body
+    end
+
+    -- helper button đẹp
+    local function CreateNiceButton(parent, text, sizeY)
+        local btn = Instance.new("TextButton", parent)
+        btn.Size = UDim2.new(1, -20, 0, sizeY or 56)
+        btn.Position = UDim2.new(0,10,0,10 + (#parent:GetChildren()-1) * (sizeY or 56))
+        btn.BackgroundColor3 = Color3.fromRGB(55,55,70)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 20
+        btn.TextColor3 = Color3.fromRGB(255,255,255)
+        btn.Text = text
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+        -- hover
+        btn.MouseEnter:Connect(function() pcall(function() btn.BackgroundColor3 = Color3.fromRGB(100,40,180) end) end)
+        btn.MouseLeave:Connect(function() pcall(function() btn.BackgroundColor3 = Color3.fromRGB(55,55,70) end) end)
+        return btn
+    end
+
+    -- ======================================
+    -- MENU: FARM BOSS (đã có, cập nhật giao diện)
+    -- ======================================
+    do
+        local function createFarmBossMenu()
+            local gui, body = CreateFluentWindowLocal("FARM BOSS", "👾")
+            -- HP label
+            local hp = Instance.new("TextLabel", body)
+            hp.Size = UDim2.new(1,-20,0,36)
+            hp.Position = UDim2.new(0,10,0,8)
+            hp.BackgroundTransparency = 1
+            hp.Font = Enum.Font.GothamBold
+            hp.TextColor3 = Color3.fromRGB(255,80,80)
+            hp.TextSize = 20
+            hp.Text = "Máu Boss: ..."
+
+            local btn = CreateNiceButton(body, "Bật/Tắt Farm Boss", 56)
+            local active = false
+            local Players = game:GetService("Players")
+            local pl = Players.LocalPlayer
+
+            btn.MouseButton1Click:Connect(function()
+                active = not active
+                btn.Text = active and "Đang Farm Boss: ON" or "Bật/Tắt Farm Boss"
+                while active do
+                    task.wait(0.06)
+                    local char = pl.Character
+                    if not char then break end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then break end
+                    -- find nearest boss-like Model
+                    local nearest, nd = nil, math.huge
+                    for _,m in ipairs(workspace:GetDescendants()) do
+                        if m:IsA("Model") and m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
+                            local hum = m:FindFirstChild("Humanoid")
+                            if hum and hum.Health > 0 then
+                                local d = (m.HumanoidRootPart.Position - hrp.Position).Magnitude
+                                if d < nd then nearest, nd = m, d end
+                            end
+                        end
+                    end
+                    if nearest then
+                        local hum = nearest:FindFirstChild("Humanoid")
+                        if hum then hp.Text = "Máu Boss: "..math.floor(hum.Health) end
+                        pcall(function()
+                            char:SetPrimaryPartCFrame(CFrame.new(nearest.HumanoidRootPart.Position + Vector3.new(0, 20, 0)))
+                        end)
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then pcall(function() tool:Activate() end) end
+                    else
+                        hp.Text = "Không tìm thấy Boss!"
+                    end
+                end
+            end)
+            return createFarmBossMenu, gui
+        end
+
+        -- if Fluent present, add button in tab; else create a function to open menu later
+        if Tabs.Main2 and Tabs.Main2.AddButton then
+            Tabs.Main2:AddButton({
+                Title = "Mở Farm Boss",
+                Description = "Mở giao diện Farm Boss",
+                Callback = function()
+                    -- build & show menu
+                    local buildFunc = createFarmBossMenu()
+                    buildFunc()
+                end
+            })
+        end
+    end
+
+    -- ======================================
+    -- MENU: FARM TIỀN
+    -- ======================================
+    do
+        local function createMoneyMenu()
+            local gui, body = CreateFluentWindowLocal("FARM TIỀN", "💵")
+            local info = Instance.new("TextLabel", body)
+            info.Size = UDim2.new(1,-20,0,36)
+            info.Position = UDim2.new(0,10,0,8)
+            info.BackgroundTransparency = 1
+            info.Font = Enum.Font.GothamBold
+            info.TextSize = 18
+            info.TextColor3 = Color3.fromRGB(0,255,170)
+            info.Text = "Chọn hành động farm tiền hoặc bật auto"
+
+            local btn = CreateNiceButton(body, "Bật/Tắt Farm Tiền", 56)
+            local active = false
+            local pl = game:GetService("Players").LocalPlayer
+
+            btn.MouseButton1Click:Connect(function()
+                active = not active
+                btn.Text = active and "Đang Farm Tiền..." or "Bật/Tắt Farm Tiền"
+                while active do
+                    task.wait(0.12)
+                    local char = pl.Character
+                    if not char then break end
+                    -- placeholder: bạn có thể sửa logic farm tiền cho game của bạn ở đây
+                    local tool = char:FindFirstChildOfClass("Tool")
+                    if tool then pcall(function() tool:Activate() end) end
+                end
+            end)
+            return createMoneyMenu, gui
+        end
+
+        if Tabs.Main1 and Tabs.Main1.AddButton then
+            Tabs.Main1:AddButton({
+                Title = "Mở Farm Tiền",
+                Description = "Mở giao diện Farm Tiền",
+                Callback = function()
+                    local build = createMoneyMenu()
+                    build()
+                end
+            })
+        end
+    end
+
+    -- ======================================
+    -- MENU: PVP
+    -- ======================================
+    do
+        local function createPvPMenu()
+            local gui, body = CreateFluentWindowLocal("PVP", "⚔️")
+            local info = Instance.new("TextLabel", body)
+            info.Size = UDim2.new(1,-20,0,36)
+            info.Position = UDim2.new(0,10,0,8)
+            info.BackgroundTransparency = 1
+            info.Font = Enum.Font.GothamBold
+            info.TextSize = 18
+            info.TextColor3 = Color3.fromRGB(255,100,100)
+            info.Text = "PvP controls (client-side helper)"
+
+            local btn = CreateNiceButton(body, "Bật/Tắt Auto PvP", 56)
+            local auto = false
+            local pl = game:GetService("Players").LocalPlayer
+
+            btn.MouseButton1Click:Connect(function()
+                auto = not auto
+                btn.Text = auto and "Đang Auto PvP..." or "Bật/Tắt Auto PvP"
+                while auto do
+                    task.wait(0.12)
+                    local char = pl.Character
+                    if not char then break end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then break end
+                    local nearestP, nd = nil, math.huge
+                    for _,v in ipairs(game:GetService("Players"):GetPlayers()) do
+                        if v ~= pl and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                            local d = (hrp.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                            if d < nd then nearestP, nd = v, d end
+                        end
+                    end
+                    if nearestP and nd <= 30 then
+                        pcall(function()
+                            char:SetPrimaryPartCFrame(CFrame.new(nearestP.Character.HumanoidRootPart.Position + Vector3.new(0, 2, 0)))
+                        end)
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then pcall(function() tool:Activate() end) end
+                    end
+                end
+            end)
+            return createPvPMenu, gui
+        end
+
+        if Tabs.Main3 and Tabs.Main3.AddButton then
+            Tabs.Main3:AddButton({
+                Title = "Mở PvP",
+                Description = "Mở giao diện PvP",
+                Callback = function()
+                    local b = createPvPMenu()
+                    b()
+                end
+            })
+        end
+    end
+
+    -- ======================================
+    -- MENU: FARM NPC
+    -- ======================================
+    do
+        local function createNPCMenu()
+            local gui, body = CreateFluentWindowLocal("FARM NPC", "👺")
+            local info = Instance.new("TextLabel", body)
+            info.Size = UDim2.new(1,-20,0,36)
+            info.Position = UDim2.new(0,10,0,8)
+            info.BackgroundTransparency = 1
+            info.Font = Enum.Font.GothamBold
+            info.TextSize = 18
+            info.TextColor3 = Color3.fromRGB(255,180,0)
+            info.Text = "Auto farm NPC (client helper)"
+
+            local btn = CreateNiceButton(body, "Bật/Tắt Farm NPC", 56)
+            local active = false
+            local pl = game:GetService("Players").LocalPlayer
+
+            btn.MouseButton1Click:Connect(function()
+                active = not active
+                btn.Text = active and "Đang Farm NPC..." or "Bật/Tắt Farm NPC"
+                while active do
+                    task.wait(0.06)
+                    local char = pl.Character
+                    if not char then break end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then break end
+                    local nearest, dmin = nil, math.huge
+                    for _,m in ipairs(workspace:GetDescendants()) do
+                        if m:IsA("Model") and m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
+                            local hum = m:FindFirstChild("Humanoid")
+                            if hum and hum.Health > 0 then
+                                local d = (hrp.Position - m.HumanoidRootPart.Position).Magnitude
+                                if d < dmin then nearest, dmin = m, d end
+                            end
+                        end
+                    end
+                    if nearest then
+                        pcall(function()
+                            char:SetPrimaryPartCFrame(CFrame.new(nearest.HumanoidRootPart.Position + Vector3.new(0,20,0)))
+                        end)
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then pcall(function() tool:Activate() end) end
+                    end
+                end
+            end)
+            return createNPCMenu, gui
+        end
+
+        if Tabs.Main5 and Tabs.Main5.AddButton then
+            Tabs.Main5:AddButton({
+                Title = "Mở Farm NPC",
+                Description = "Mở giao diện Farm NPC",
+                Callback = function()
+                    local b = createNPCMenu()
+                    b()
+                end
+            })
+        end
+    end
+
+    -- openBtn: khi bấm mở Fluent window (nếu có) hoặc thông báo
+    openBtn.MouseButton1Click:Connect(function()
+        if Fluent and Window and Window.Toggle then
+            pcall(function() Window:Toggle() end)
+        else
+            -- fallback: thông báo
+            pcall(function()
+                local StarterGui = game:GetService("StarterGui")
+                StarterGui:SetCore("SendNotification", {Title="TÉO HUB", Text="Fluent không load được — dùng UI fallback.", Duration=3})
+            end)
+        end
+    end)
+
+    print("LoadMainUI() executed — UI created.")
+end
+
+-- =========================
+-- KEY SYSTEM (hiện giao diện nhập key, gọi LoadMainUI khi đúng)
+-- =========================
+local CORRECT_KEY = "XQHUB123"   -- đổi ở đây nếu muốn
+
+-- Build minimal key GUI
+local keyGui = Instance.new("ScreenGui")
+keyGui.Name = "KeySystem"
+keyGui.ResetOnSpawn = false
+keyGui.Parent = game:GetService("CoreGui")
+
+local Frame = Instance.new("Frame", keyGui)
+Frame.Size = UDim2.new(0, 360, 0, 220)
+Frame.Position = UDim2.new(0.5, -180, 0.5, -110)
+Frame.AnchorPoint = Vector2.new(0.5,0.5)
+Frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
 
 local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Size = UDim2.new(1,0,0,50)
+Title.Position = UDim2.new(0,0,0,8)
 Title.BackgroundTransparency = 1
-Title.Text = "🔐 MẤT QUYỀN TRUY CẬP — KEY SYSTEM"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "🔑 NHẬP KEY ĐỂ MỞ MENU"
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 18
+Title.TextSize = 22
+Title.TextColor3 = Color3.fromRGB(255,255,255)
 
-local Box = Instance.new("TextBox", Frame)
-Box.Size = UDim2.new(1, -40, 0, 40)
-Box.Position = UDim2.new(0, 20, 0, 60)
-Box.PlaceholderText = "Nhập key: XQZHUB88"
-Box.Text = ""
-Box.Font = Enum.Font.Gotham
-Box.TextSize = 16
-Box.TextColor3 = Color3.fromRGB(255, 255, 255)
-Box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-Box.Parent = Frame
-Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 10)
+local KeyBox = Instance.new("TextBox", Frame)
+KeyBox.Size = UDim2.new(1,-40,0,48)
+KeyBox.Position = UDim2.new(0,20,0,68)
+KeyBox.PlaceholderText = "Nhập key tại đây..."
+KeyBox.Text = ""
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 18
+KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
+KeyBox.BackgroundColor3 = Color3.fromRGB(55,55,55)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0,8)
 
-local Btn = Instance.new("TextButton", Frame)
-Btn.Size = UDim2.new(1, -40, 0, 45)
-Btn.Position = UDim2.new(0, 20, 0, 120)
-Btn.Text = "🔓 Unlock Hub"
-Btn.Font = Enum.Font.GothamBold
-Btn.TextSize = 18
-Btn.TextColor3 = Color3.new(1,1,1)
-Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 40)
-Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
+local Confirm = Instance.new("TextButton", Frame)
+Confirm.Size = UDim2.new(1,-40,0,48)
+Confirm.Position = UDim2.new(0,20,0,128)
+Confirm.Text = "MỞ MENU"
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextSize = 20
+Confirm.TextColor3 = Color3.fromRGB(255,255,255)
+Confirm.BackgroundColor3 = Color3.fromRGB(60,120,255)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0,8)
 
-local Status = Instance.new("TextLabel", Frame)
-Status.Size = UDim2.new(1, 0, 0, 35)
-Status.Position = UDim2.new(0, 0, 0, 170)
-Status.BackgroundTransparency = 1
-Status.TextColor3 = Color3.fromRGB(255, 80, 80)
-Status.Font = Enum.Font.GothamBold
-Status.TextSize = 16
-Status.Text = ""
+local Wrong = Instance.new("TextLabel", Frame)
+Wrong.Size = UDim2.new(1,0,0,30)
+Wrong.Position = UDim2.new(0,0,1,-32)
+Wrong.BackgroundTransparency = 1
+Wrong.Font = Enum.Font.GothamBold
+Wrong.TextSize = 18
+Wrong.TextColor3 = Color3.fromRGB(255,80,80)
+Wrong.Text = ""
 
---=============================
--- 🧪 CHECK KEY
---=============================
-Btn.MouseButton1Click:Connect(function()
-    if Box.Text == CORRECT_KEY then
-        Status.TextColor3 = Color3.fromRGB(80,255,80)
-        Status.Text = "✔ Thành công! Đang mở HUB..."
-
-        task.wait(0.8)
-        KeyUI:Destroy()
-
-        -- Load UI chính sau khi mở key
-        loadstring(game:HttpGet("https://pastebin.com/raw/MQTCHUB_MAIN"))()
+Confirm.MouseButton1Click:Connect(function()
+    if KeyBox.Text == CORRECT_KEY then
+        Wrong.Text = "Đúng key! Đang mở menu..."
+        task.wait(0.35)
+        pcall(function() keyGui:Destroy() end)
+        -- gọi LoadMainUI sau khi đóng key GUI
+        pcall(function()
+            LoadMainUI()
+        end)
     else
-        Status.TextColor3 = Color3.fromRGB(255,80,80)
-        Status.Text = "❌ Key Sai! Hãy thử lại!"
+        Wrong.Text = "❌ Sai key!"
     end
 end)
+
+-- optional: allow pressing Enter in TextBox to confirm
+KeyBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        Confirm:CaptureFocus()
+        Confirm.MouseButton1Click:Wait()
+    end
+end)
+
+print("Key system loaded. Nhập key để mở menu.")
