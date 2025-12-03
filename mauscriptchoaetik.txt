@@ -1,126 +1,176 @@
+-- Sigma Hub Lite (Safe) — Key system + Sigma-style UI + Player tweaks + System info
+-- Safe: không chứa auto-farm / auto-boss / pvp cheat
+-- Dán vào executor hoặc StarterPlayerScripts
+
 repeat task.wait() until game:IsLoaded()
 
---=========================
---  FLUENT UI LIBRARY
---=========================
-local Fluent = loadstring(game:HttpGet("https://pastebin.com/raw/ZM7a7f0m"))()
-
-local Window = Fluent:CreateWindow({
-    Title = "Sigma Hub | LuanScript",
-    SubTitle = "Made by Luan",
-    TabWidth = 140,
-    Size = UDim2.fromOffset(520, 350),
-    Acrylic = true,
-    Theme = "Dark"
-})
-
-local Tabs = {
-    Home = Window:AddTab({ Title = "HOME", Icon = "home" }),
-    Player = Window:AddTab({ Title = "PLAYER", Icon = "user" }),
-    AntiAFK = Window:AddTab({ Title = "ANTI AFK", Icon = "plug" }),
-    PvP = Window:AddTab({ Title = "PVP", Icon = "sword" })
+------------------------------
+-- CONFIG
+------------------------------
+local KEY = "XQHUB123"
+local THEME = {
+    Main = Color3.fromRGB(8,180,100),
+    Dark = Color3.fromRGB(18,18,20),
+    Panel = Color3.fromRGB(28,28,32),
+    Accent = Color3.fromRGB(60,200,120),
+    Text = Color3.fromRGB(230,230,230)
 }
 
----------------------------------------------------------------
--- 🔥 TAB HOME
----------------------------------------------------------------
-Tabs.Home:AddParagraph({
-    Title = "Sigma Hub",
-    Content = "Chào mừng bạn đến với bản UI Sigma Hub.\nCác tab gồm: PLAYER – ANTI AFK – PVP."
-})
-
-Tabs.Home:AddButton({
-    Title = "Thông báo",
-    Description = "Hiện thông báo popup",
-    Callback = function()
-        Fluent:Notify({
-            Title = "Sigma Hub",
-            Content = "Chúc bạn chơi vui vẻ!",
-            Duration = 4
-        })
+------------------------------
+-- Helper create instance
+------------------------------
+local function new(parent, class, props)
+    local obj = Instance.new(class)
+    for k,v in pairs(props or {}) do
+        pcall(function() obj[k] = v end)
     end
-})
-
----------------------------------------------------------------
--- 👤 TAB PLAYER
----------------------------------------------------------------
-local player = game.Players.LocalPlayer
-
-local function getChar()
-    return player.Character or player.CharacterAdded:Wait()
+    obj.Parent = parent
+    return obj
 end
 
-local hum = getChar():WaitForChild("Humanoid")
+local core = game:GetService("CoreGui")
 
-Tabs.Player:AddSlider("Walk", {
-    Title = "Tốc độ chạy",
-    Default = 16,
-    Min = 10,
-    Max = 200,
-    Rounding = 1,
-    Callback = function(v)
-        hum.WalkSpeed = v
-    end
+-----------------------------------------------------------
+-- ================== KEY UI ============================
+-----------------------------------------------------------
+local keyGui = Instance.new("ScreenGui", core)
+keyGui.Name = "SigmaKeyUI"
+keyGui.ResetOnSpawn = false
+
+local frame = new(keyGui, "Frame", {
+    Size = UDim2.new(0,380,0,220),
+    Position = UDim2.new(0.5,-190,0.5,-110),
+    BackgroundColor3 = THEME.Dark,
+    Active = true, Draggable = true
+})
+new(frame, "UICorner", {CornerRadius = UDim.new(0,12)})
+
+new(frame, "TextLabel", {
+    Size = UDim2.new(1,0,0,56),
+    BackgroundColor3 = THEME.Main,
+    Text = "🔐 Sigma Hub — Enter Key",
+    TextColor3 = Color3.new(1,1,1),
+    Font = Enum.Font.GothamBold, TextSize = 20
 })
 
-Tabs.Player:AddSlider("Jump", {
-    Title = "Độ cao nhảy",
-    Default = 50,
-    Min = 10,
-    Max = 300,
-    Rounding = 1,
-    Callback = function(v)
-        hum.JumpPower = v
-    end
+local keyBox = new(frame, "TextBox", {
+    Size = UDim2.new(1,-40,0,48),
+    Position = UDim2.new(0,20,0,76),
+    PlaceholderText = "Nhập key tại đây...",
+    Font = Enum.Font.Gotham,
+    TextSize = 18,
+    TextColor3 = THEME.Text,
+    BackgroundColor3 = THEME.Panel
+})
+new(keyBox, "UICorner", {CornerRadius = UDim.new(0,8)})
+
+local openBtn = new(frame, "TextButton", {
+    Size = UDim2.new(1,-40,0,44),
+    Position = UDim2.new(0,20,0,136),
+    Text = "MỞ MENU",
+    Font = Enum.Font.GothamBold,
+    TextSize = 20,
+    BackgroundColor3 = THEME.Accent,
+    TextColor3 = Color3.new(1,1,1)
+})
+new(openBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
+
+local msg = new(frame, "TextLabel", {
+    Size = UDim2.new(1,0,0,26),
+    Position = UDim2.new(0,0,1,-26),
+    BackgroundTransparency = 1,
+    Text = "",
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextColor3 = Color3.fromRGB(255,100,100)
 })
 
-Tabs.Player:AddButton({
-    Title = "Reset nhân vật",
-    Callback = function()
-        player.Character:BreakJoints()
-    end
-})
+--------------------------------------------------------------
+-- FORWARD DECLARE LoadSigma
+--------------------------------------------------------------
+local function LoadSigma() end
 
----------------------------------------------------------------
--- 🟢 TAB ANTI AFK
----------------------------------------------------------------
-Tabs.AntiAFK:AddToggle("AAFK", {
-    Title = "Bật Anti AFK",
-    Default = false,
-    Callback = function(state)
-        if state then
-            Fluent:Notify({Title="Anti AFK", Content="Đã bật!", Duration=3})
-            local vu = game:GetService("VirtualUser")
-            player.Idled:Connect(function()
-                vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-                task.wait(1)
-                vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            end)
-        else
-            Fluent:Notify({Title="Anti AFK", Content="Đã tắt!", Duration=3})
-        end
-    end
-})
+local function destroyKeyAndLoad()
+    pcall(function() keyGui:Destroy() end)
+    task.wait(0.15)
+    LoadSigma()
+end
 
----------------------------------------------------------------
--- ⚔️ TAB PVP
----------------------------------------------------------------
-Tabs.PvP:AddButton({
-    Title = "ESP Người chơi",
-    Description = "Hiển thị player qua tường",
-    Callback = function()
-        loadstring(game:HttpGet("https://pastebin.com/raw/K5Xjv4Hn"))()
+openBtn.MouseButton1Click:Connect(function()
+    if keyBox.Text == KEY then
+        msg.Text = "✔ Đúng key — Đang mở menu..."
+        task.wait(0.25)
+        destroyKeyAndLoad()
+    else
+        msg.Text = "❌ Sai key!"
     end
-})
+end)
 
-Tabs.PvP:AddButton({
-    Title = "Aimlock cơ bản",
-    Description = "Giữ chuột phải để Aimlock",
-    Callback = function()
-        loadstring(game:HttpGet("https://pastebin.com/raw/YyR0tTvM"))()
-    end
-})
+keyBox.FocusLost:Connect(function(enter)
+    if enter then openBtn:Activate() end
+end)
 
----------------------------------------------------------------
-Window:SelectTab(Tabs.Home)
-Fluent:Notify({Title="Sigma Hub", Content="UI đã load xong!", Duration=3})
+--------------------------------------------------------------------
+-- ====================== MAIN SIGMA UI ============================
+--------------------------------------------------------------------
+function LoadSigma()
+    if core:FindFirstChild("SigmaUI") then return end    
+
+    local sigmaGui = Instance.new("ScreenGui", core)
+    sigmaGui.Name = "SigmaUI"
+
+    --------------------- mini toggle --------------------
+    local miniGui = Instance.new("ScreenGui", core)
+    miniGui.Name = "SigmaMini"
+
+    local miniBtn = new(miniGui, "ImageButton", {
+        Size = UDim2.new(0,44,0,44),
+        Position = UDim2.new(0.02,0,0.22,0),
+        BackgroundColor3 = THEME.Panel
+    })
+    new(miniBtn, "UICorner", {CornerRadius = UDim.new(1,8)})
+
+    new(miniBtn, "TextLabel", {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Text = "Σ",
+        Font = Enum.Font.GothamBold,
+        TextColor3 = THEME.Text,
+        TextSize = 20
+    })
+
+    ---------------------- MAIN FRAME ----------------------
+    local main = new(sigmaGui, "Frame", {
+        Size = UDim2.new(0,520,0,380),
+        Position = UDim2.new(0.5,-260,0.5,-190),
+        BackgroundColor3 = THEME.Dark,
+        Active = true, Draggable = true
+    })
+    new(main, "UICorner", {CornerRadius = UDim.new(0,14)})
+
+    local header = new(main, "Frame", {
+        Size = UDim2.new(1,0,0,64),
+        BackgroundColor3 = THEME.Main
+    })
+    new(header, "UICorner", {CornerRadius = UDim.new(0,12)})
+
+    new(header, "TextLabel", {
+        Text = "Sigma Hub — Lite",
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 20,
+        TextColor3 = Color3.new(1,1,1)
+    })
+
+    ----------------------- SIDEBAR -----------------------
+    local sidebar = new(main, "Frame", {
+        Size = UDim2.new(0,140,1,-64),
+        Position = UDim2.new(0,0,0,64),
+        BackgroundColor3 = THEME.Panel
+    })
+    new(sidebar, "UICorner", {CornerRadius = UDim.new(0,10)})
+
+    local content = new(main, "Frame", {
+        Size = UDim2.new(1,-140,1,-64),
+        Position
