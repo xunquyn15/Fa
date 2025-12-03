@@ -1,13 +1,14 @@
--- Sigma Hub Lite (Safe) — Key system + Sigma-style UI + Player tweaks + System info
--- Safe: không chứa auto-farm / auto-boss / pvp cheat
--- Dán vào executor hoặc StarterPlayerScripts
+-- Sigma Hub Studio (Safe) — LocalScript for StarterPlayerScripts
+-- Creates ScreenGui in PlayerGui. No exploit functions used.
 
 repeat task.wait() until game:IsLoaded()
 
-------------------------------
--- CONFIG
-------------------------------
-local KEY = "XQHUB123"
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local KEY = "XQHUB123" -- change if you want
 local THEME = {
     Main = Color3.fromRGB(8,180,100),
     Dark = Color3.fromRGB(18,18,20),
@@ -16,161 +17,294 @@ local THEME = {
     Text = Color3.fromRGB(230,230,230)
 }
 
-------------------------------
--- Helper create instance
-------------------------------
-local function new(parent, class, props)
-    local obj = Instance.new(class)
+-- helper
+local function new(class, props)
+    local o = Instance.new(class)
     for k,v in pairs(props or {}) do
-        pcall(function() obj[k] = v end)
+        if k == "Parent" then o.Parent = v else pcall(function() o[k] = v end) end
     end
-    obj.Parent = parent
-    return obj
+    return o
 end
 
-local core = game:GetService("CoreGui")
+-- Parent GUI to PlayerGui
+local playerGui = player:WaitForChild("PlayerGui")
 
------------------------------------------------------------
--- ================== KEY UI ============================
------------------------------------------------------------
-local keyGui = Instance.new("ScreenGui", core)
-keyGui.Name = "SigmaKeyUI"
-keyGui.ResetOnSpawn = false
+-- root ScreenGui
+local screen = new("ScreenGui", {Parent = playerGui, Name = "SigmaHubGUI", ResetOnSpawn = false})
 
-local frame = new(keyGui, "Frame", {
-    Size = UDim2.new(0,380,0,220),
-    Position = UDim2.new(0.5,-190,0.5,-110),
+-- main frame
+local main = new("Frame", {
+    Parent = screen,
+    Size = UDim2.new(0,520,0,380),
+    Position = UDim2.new(0.5, -260, 0.5, -190),
     BackgroundColor3 = THEME.Dark,
-    Active = true, Draggable = true
+    Active = true,
+    Draggable = true
 })
-new(frame, "UICorner", {CornerRadius = UDim.new(0,12)})
+new("UICorner", {Parent = main, CornerRadius = UDim.new(0,14)})
 
-new(frame, "TextLabel", {
-    Size = UDim2.new(1,0,0,56),
-    BackgroundColor3 = THEME.Main,
-    Text = "🔐 Sigma Hub — Enter Key",
-    TextColor3 = Color3.new(1,1,1),
-    Font = Enum.Font.GothamBold, TextSize = 20
-})
-
-local keyBox = new(frame, "TextBox", {
-    Size = UDim2.new(1,-40,0,48),
-    Position = UDim2.new(0,20,0,76),
-    PlaceholderText = "Nhập key tại đây...",
-    Font = Enum.Font.Gotham,
-    TextSize = 18,
-    TextColor3 = THEME.Text,
-    BackgroundColor3 = THEME.Panel
-})
-new(keyBox, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-local openBtn = new(frame, "TextButton", {
-    Size = UDim2.new(1,-40,0,44),
-    Position = UDim2.new(0,20,0,136),
-    Text = "MỞ MENU",
+-- header
+local header = new("Frame", {Parent = main, Size = UDim2.new(1,0,0,64), BackgroundColor3 = THEME.Main})
+new("UICorner", {Parent = header, CornerRadius = UDim.new(0,12)})
+new("TextLabel", {
+    Parent = header,
+    Size = UDim2.new(1,0,1,0),
+    BackgroundTransparency = 1,
+    Text = "Sigma Hub — Studio",
     Font = Enum.Font.GothamBold,
     TextSize = 20,
-    BackgroundColor3 = THEME.Accent,
     TextColor3 = Color3.new(1,1,1)
 })
-new(openBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
 
-local msg = new(frame, "TextLabel", {
-    Size = UDim2.new(1,0,0,26),
-    Position = UDim2.new(0,0,1,-26),
-    BackgroundTransparency = 1,
-    Text = "",
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextColor3 = Color3.fromRGB(255,100,100)
-})
+-- sidebar
+local sidebar = new("Frame", {Parent = main, Size = UDim2.new(0,140,1,-64), Position = UDim2.new(0,0,0,64), BackgroundColor3 = THEME.Panel})
+new("UICorner", {Parent = sidebar, CornerRadius = UDim.new(0,10)})
 
---------------------------------------------------------------
--- FORWARD DECLARE LoadSigma
---------------------------------------------------------------
-local function LoadSigma() end
+local content = new("Frame", {Parent = main, Size = UDim2.new(1,-140,1,-64), Position = UDim2.new(0,140,0,64), BackgroundTransparency = 1})
 
-local function destroyKeyAndLoad()
-    pcall(function() keyGui:Destroy() end)
-    task.wait(0.15)
-    LoadSigma()
+-- create tab buttons and pages
+local tabs = {"Home","Player","AntiAFK","System"}
+local pages = {}
+for i, name in ipairs(tabs) do
+    local btn = new("TextButton", {
+        Parent = sidebar,
+        Size = UDim2.new(1,-20,0,52),
+        Position = UDim2.new(0,10,0,12 + (i-1)*62),
+        Text = name,
+        Font = Enum.Font.GothamSemibold,
+        TextSize = 18,
+        BackgroundColor3 = Color3.fromRGB(36,36,36),
+        TextColor3 = THEME.Text
+    })
+    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,8)})
+
+    local page = new("Frame", {
+        Parent = content,
+        Size = UDim2.new(1,-20,1,-20),
+        Position = UDim2.new(0,10,0,10),
+        BackgroundTransparency = 1,
+        Visible = (i==1)
+    })
+    pages[name] = page
+
+    btn.MouseButton1Click:Connect(function()
+        for _,pg in pairs(pages) do pg.Visible = false end
+        page.Visible = true
+    end)
 end
 
-openBtn.MouseButton1Click:Connect(function()
-    if keyBox.Text == KEY then
-        msg.Text = "✔ Đúng key — Đang mở menu..."
-        task.wait(0.25)
-        destroyKeyAndLoad()
-    else
-        msg.Text = "❌ Sai key!"
+-------------------
+-- HOME page
+-------------------
+do
+    local p = pages.Home
+    new("TextLabel", {
+        Parent = p,
+        Text = "Welcome to Sigma Hub (Studio)",
+        Size = UDim2.new(1,0,0,36),
+        BackgroundColor3 = Color3.fromRGB(26,26,28),
+        TextColor3 = THEME.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 16
+    })
+    new("TextLabel", {
+        Parent = p,
+        Text = "Phiên bản Studio an toàn — dùng cho game bạn phát triển.",
+        Size = UDim2.new(1,0,0,50),
+        Position = UDim2.new(0,0,0,46),
+        BackgroundTransparency = 1,
+        TextColor3 = THEME.Text,
+        Font = Enum.Font.Gotham,
+        TextSize = 14
+    })
+end
+
+-------------------
+-- PLAYER page
+-------------------
+do
+    local p = pages.Player
+    local labelWS = new("TextLabel", {Parent=p, Text="WalkSpeed", Size=UDim2.new(0.3,0,0,24), Position=UDim2.new(0,8,0,8), BackgroundTransparency=1, TextColor3=THEME.Text})
+    local wsBox = new("TextBox", {Parent=p, PlaceholderText="16", Size=UDim2.new(0.3,0,0,34), Position=UDim2.new(0,8,0,36), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
+    local wsBtn = new("TextButton", {Parent=p, Text="Set", Size=UDim2.new(0.2,0,0,34), Position=UDim2.new(0.32,12,0,36), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
+    local labelJP = new("TextLabel", {Parent=p, Text="JumpPower", Size=UDim2.new(0.3,0,0,24), Position=UDim2.new(0,8,0,88), BackgroundTransparency=1, TextColor3=THEME.Text})
+    local jpBox = new("TextBox", {Parent=p, PlaceholderText="50", Size=UDim2.new(0.3,0,0,34), Position=UDim2.new(0,8,0,116), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
+    local jpBtn = new("TextButton", {Parent=p, Text="Set", Size=UDim2.new(0.2,0,0,34), Position=UDim2.new(0.32,12,0,116), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
+    local resetBtn = new("TextButton", {Parent=p, Text="Reset Character", Size=UDim2.new(0.5,0,0,36), Position=UDim2.new(0,8,0,170), BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=THEME.Text})
+
+    local function getHumanoid()
+        local ch = player.Character or player.CharacterAdded:Wait()
+        return ch:FindFirstChildOfClass("Humanoid")
+    end
+
+    wsBtn.MouseButton1Click:Connect(function()
+        local v = tonumber(wsBox.Text)
+        local h = getHumanoid()
+        if v and h then h.WalkSpeed = v end
+    end)
+    jpBtn.MouseButton1Click:Connect(function()
+        local v = tonumber(jpBox.Text)
+        local h = getHumanoid()
+        if v and h then h.JumpPower = v end
+    end)
+    resetBtn.MouseButton1Click:Connect(function()
+        local ch = player.Character
+        if ch then pcall(function() ch:BreakJoints() end) end
+    end)
+end
+
+---------------------
+-- ANTI AFK page (safe)
+-- - shows AFK timer
+-- - optional small movement to avoid idle (uses MoveTo)
+-- - auto-teleport demonstration with notification
+---------------------
+do
+    local p = pages.AntiAFK
+
+    new("TextLabel", {Parent=p, Text="Anti AFK (Safe)", Size=UDim2.new(1,0,0,30), BackgroundTransparency=1, TextColor3=THEME.Text, Font=Enum.Font.GothamBold, TextSize=16})
+    local afkLabel = new("TextLabel", {Parent=p, Text="AFK: 0s", Size=UDim2.new(1,0,0,30), Position=UDim2.new(0,0,0,36), BackgroundTransparency=1, TextColor3=THEME.Text})
+    local totalLabel = new("TextLabel", {Parent=p, Text="Tổng AFK: 0 phút", Size=UDim2.new(1,0,0,24), Position=UDim2.new(0,0,0,72), BackgroundTransparency=1, TextColor3=Color3.fromRGB(200,200,200)})
+    local fpsLabel = new("TextLabel", {Parent=p, Text="FPS: ...", Size=UDim2.new(0.4,0,0,24), Position=UDim2.new(0,0,0,110), BackgroundTransparency=1, TextColor3=THEME.Text})
+
+    local afkToggle = new("TextButton", {Parent=p, Text="Enable AFK Mover", Size=UDim2.new(0.46,0,0,36), Position=UDim2.new(0,0,0,140), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
+    local tpToggle = new("TextButton", {Parent=p, Text="Toggle Auto Teleport", Size=UDim2.new(0.46,0,0,36), Position=UDim2.new(0.5,8,0,140), BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=THEME.Text})
+
+    local afkMoving = false
+    local autoTP = false
+    local AFK_seconds = 0
+    local AFK_minutes_total = 0
+
+    -- FPS measure via RenderStepped counting
+    do
+        local frameCount = 0
+        RunService.RenderStepped:Connect(function()
+            frameCount = frameCount + 1
+        end)
+        task.spawn(function()
+            while task.wait(1) do
+                local f = frameCount
+                fpsLabel.Text = "FPS: "..tostring(f)
+                frameCount = 0
+            end
+        end)
+    end
+
+    -- AFK counter + optional mover
+    task.spawn(function()
+        while task.wait(1) do
+            AFK_seconds = AFK_seconds + 1
+            if AFK_seconds % 60 == 0 then AFK_minutes_total = AFK_minutes_total + 1 end
+            afkLabel.Text = "AFK: "..AFK_seconds.."s"
+            totalLabel.Text = "Tổng AFK: "..AFK_minutes_total.." phút"
+
+            if afkMoving and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                -- perform a very small move to nearby position (safe)
+                local hrp = player.Character.HumanoidRootPart
+                local dest = hrp.Position + Vector3.new((math.random()-0.5)*2,0,(math.random()-0.5)*2)
+                pcall(function()
+                    -- use MoveTo on humanoid if available, fallback to CFrame gently
+                    local h = player.Character:FindFirstChildOfClass("Humanoid")
+                    if h then
+                        h:MoveTo(dest)
+                    else
+                        hrp.CFrame = hrp.CFrame * CFrame.new((math.random()-0.5)*0.5,0,(math.random()-0.5)*0.5)
+                    end
+                end)
+            end
+        end
+    end)
+
+    afkToggle.MouseButton1Click:Connect(function()
+        afkMoving = not afkMoving
+        afkToggle.Text = afkMoving and "Disable AFK Mover" or "Enable AFK Mover"
+        afkToggle.BackgroundColor3 = afkMoving and Color3.fromRGB(200,80,80) or THEME.Accent
+    end)
+
+    -- Auto Teleport demo: teleports to a sample location in workspace (if exists),
+    -- and shows a UI Tween "Teleport OK" notification inside this ScreenGui.
+    local function showTeleportNotification(text)
+        local notif = new("Frame", {Parent = screen, Size = UDim2.new(0,220,0,40), Position = UDim2.new(0.5,-110,0.15,0), BackgroundColor3 = THEME.Panel})
+        new("UICorner", {Parent = notif, CornerRadius = UDim.new(0,8)})
+        new("TextLabel", {Parent = notif, Text = text, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, TextColor3 = THEME.Text, Font = Enum.Font.GothamBold})
+        local tween = TweenService:Create(notif, TweenInfo.new(0.25), {Position = UDim2.new(0.5,-110,0.12,0)})
+        tween:Play()
+        task.delay(2, function()
+            local t2 = TweenService:Create(notif, TweenInfo.new(0.25), {Position = UDim2.new(0.5,-110,0.05,0), BackgroundTransparency = 1})
+            t2:Play()
+            t2.Completed:Wait()
+            notif:Destroy()
+        end)
+    end
+
+    tpToggle.MouseButton1Click:Connect(function()
+        autoTP = not autoTP
+        tpToggle.Text = autoTP and "AutoTP: ON" or "Toggle Auto Teleport"
+        tpToggle.BackgroundColor3 = autoTP and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60)
+        if autoTP then
+            showTeleportNotification("Auto Teleport bật — Teleport OK")
+            -- example teleport loop (safe: requires the named part exists; change to your place)
+            task.spawn(function()
+                while autoTP do
+                    task.wait(5)
+                    if not autoTP then break end
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = player.Character.HumanoidRootPart
+                        -- attempt teleport to a folder "TeleportPoints" > "Point1" if present, otherwise small upward hop
+                        local destPart = workspace:FindFirstChild("TeleportPoint") -- optional part in workspace
+                        if destPart and destPart:IsA("BasePart") then
+                            hrp.CFrame = destPart.CFrame + Vector3.new(0,3,0)
+                        else
+                            -- small safe hop
+                            hrp.CFrame = hrp.CFrame * CFrame.new(0,3,0)
+                        end
+                        showTeleportNotification("📌 Teleport OK")
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+-- initial visibility: hidden — open with key or button
+main.Visible = false
+
+-- small floating open button (in PlayerGui)
+local openMini = new("TextButton", {Parent = playerGui, Size = UDim2.new(0,44,0,44), Position = UDim2.new(0.02,0,0.85,0), Text = "Σ", BackgroundColor3 = THEME.Panel, TextColor3 = THEME.Text})
+new("UICorner", {Parent = openMini, CornerRadius = UDim.new(1,8)})
+openMini.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
+
+-- Key input to open (client-side)
+local UserInput = game:GetService("UserInputService")
+UserInput.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    -- if press K then prompt key (simple)
+    if input.KeyCode == Enum.KeyCode.K then
+        -- show a simple Prompt using Roblox's TextBox modal
+        main.Visible = true
     end
 end)
 
-keyBox.FocusLost:Connect(function(enter)
-    if enter then openBtn:Activate() end
+-- Simple on-screen key panel (for Studio convenience)
+local keyPanel = new("Frame", {Parent = playerGui, Size = UDim2.new(0,300,0,110), Position = UDim2.new(0.5,-150,0.85,0), BackgroundColor3 = THEME.Panel})
+new("UICorner", {Parent=keyPanel, CornerRadius = UDim.new(0,8)})
+local kLabel = new("TextLabel", {Parent=keyPanel, Text="Enter Key to open UI", Size=UDim2.new(1,0,0,24), BackgroundTransparency=1, TextColor3=THEME.Text})
+local kBox = new("TextBox", {Parent=keyPanel, PlaceholderText="Key here...", Size=UDim2.new(1,-24,0,36), Position=UDim2.new(0,12,0,30), BackgroundColor3=Color3.fromRGB(36,36,36), TextColor3=THEME.Text})
+local kBtn = new("TextButton", {Parent=keyPanel, Text="Open", Size=UDim2.new(0.4,0,0,30), Position=UDim2.new(0.3,0,0,72), BackgroundColor3=THEME.Accent, TextColor3=Color3.new(1,1,1)})
+kBtn.MouseButton1Click:Connect(function()
+    if kBox.Text == KEY then
+        kBox.Text = ""
+        keyPanel:Destroy()
+        main.Visible = true
+    else
+        kBox.Text = ""
+        -- quick red flash
+        local orig = kBtn.BackgroundColor3
+        kBtn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+        task.delay(0.25, function() if kBtn and kBtn.Parent then kBtn.BackgroundColor3 = orig end end)
+    end
 end)
 
---------------------------------------------------------------------
--- ====================== MAIN SIGMA UI ============================
---------------------------------------------------------------------
-function LoadSigma()
-    if core:FindFirstChild("SigmaUI") then return end    
-
-    local sigmaGui = Instance.new("ScreenGui", core)
-    sigmaGui.Name = "SigmaUI"
-
-    --------------------- mini toggle --------------------
-    local miniGui = Instance.new("ScreenGui", core)
-    miniGui.Name = "SigmaMini"
-
-    local miniBtn = new(miniGui, "ImageButton", {
-        Size = UDim2.new(0,44,0,44),
-        Position = UDim2.new(0.02,0,0.22,0),
-        BackgroundColor3 = THEME.Panel
-    })
-    new(miniBtn, "UICorner", {CornerRadius = UDim.new(1,8)})
-
-    new(miniBtn, "TextLabel", {
-        Size = UDim2.new(1,0,1,0),
-        BackgroundTransparency = 1,
-        Text = "Σ",
-        Font = Enum.Font.GothamBold,
-        TextColor3 = THEME.Text,
-        TextSize = 20
-    })
-
-    ---------------------- MAIN FRAME ----------------------
-    local main = new(sigmaGui, "Frame", {
-        Size = UDim2.new(0,520,0,380),
-        Position = UDim2.new(0.5,-260,0.5,-190),
-        BackgroundColor3 = THEME.Dark,
-        Active = true, Draggable = true
-    })
-    new(main, "UICorner", {CornerRadius = UDim.new(0,14)})
-
-    local header = new(main, "Frame", {
-        Size = UDim2.new(1,0,0,64),
-        BackgroundColor3 = THEME.Main
-    })
-    new(header, "UICorner", {CornerRadius = UDim.new(0,12)})
-
-    new(header, "TextLabel", {
-        Text = "Sigma Hub — Lite",
-        Size = UDim2.new(1,0,1,0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 20,
-        TextColor3 = Color3.new(1,1,1)
-    })
-
-    ----------------------- SIDEBAR -----------------------
-    local sidebar = new(main, "Frame", {
-        Size = UDim2.new(0,140,1,-64),
-        Position = UDim2.new(0,0,0,64),
-        BackgroundColor3 = THEME.Panel
-    })
-    new(sidebar, "UICorner", {CornerRadius = UDim.new(0,10)})
-
-    local content = new(main, "Frame", {
-        Size = UDim2.new(1,-140,1,-64),
-        Position
+-- end script
