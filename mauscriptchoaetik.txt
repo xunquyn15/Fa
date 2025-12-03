@@ -1,773 +1,126 @@
--- Sigma Hub — FULL (Key system + Sigma-style UI + AntiAFK + FPSBoost + AutoTP + Farm Boss + PvP tools)
--- Dán nguyên vào executor. Theme: Xanh Neon.
-
 repeat task.wait() until game:IsLoaded()
 
--- ======= CONFIG =======
-local KEY = "XQHUB123" -- change if needed
-local THEME = {
-    Main = Color3.fromRGB(8, 180, 100),      -- neon green
-    Dark = Color3.fromRGB(18,18,20),
-    Panel = Color3.fromRGB(28,28,32),
-    Accent = Color3.fromRGB(60,200,120),
-    Text = Color3.fromRGB(230,230,230)
+--=========================
+--  FLUENT UI LIBRARY
+--=========================
+local Fluent = loadstring(game:HttpGet("https://pastebin.com/raw/ZM7a7f0m"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Sigma Hub | LuanScript",
+    SubTitle = "Made by Luan",
+    TabWidth = 140,
+    Size = UDim2.fromOffset(520, 350),
+    Acrylic = true,
+    Theme = "Dark"
+})
+
+local Tabs = {
+    Home = Window:AddTab({ Title = "HOME", Icon = "home" }),
+    Player = Window:AddTab({ Title = "PLAYER", Icon = "user" }),
+    AntiAFK = Window:AddTab({ Title = "ANTI AFK", Icon = "plug" }),
+    PvP = Window:AddTab({ Title = "PVP", Icon = "sword" })
 }
-local isSynapseEnv = (syn and true) or false
 
--- small helper
-local function new(parent, class, props)
-    local obj = Instance.new(class)
-    for k,v in pairs(props or {}) do
-        if k == "Parent" then obj.Parent = v else pcall(function() obj[k] = v end) end
+---------------------------------------------------------------
+-- 🔥 TAB HOME
+---------------------------------------------------------------
+Tabs.Home:AddParagraph({
+    Title = "Sigma Hub",
+    Content = "Chào mừng bạn đến với bản UI Sigma Hub.\nCác tab gồm: PLAYER – ANTI AFK – PVP."
+})
+
+Tabs.Home:AddButton({
+    Title = "Thông báo",
+    Description = "Hiện thông báo popup",
+    Callback = function()
+        Fluent:Notify({
+            Title = "Sigma Hub",
+            Content = "Chúc bạn chơi vui vẻ!",
+            Duration = 4
+        })
     end
-    obj.Parent = obj.Parent or parent
-    return obj
+})
+
+---------------------------------------------------------------
+-- 👤 TAB PLAYER
+---------------------------------------------------------------
+local player = game.Players.LocalPlayer
+
+local function getChar()
+    return player.Character or player.CharacterAdded:Wait()
 end
 
--- ======= KEY SYSTEM UI =======
-local keyGui = Instance.new("ScreenGui")
-keyGui.Name = "SigmaKeyUI"
-keyGui.ResetOnSpawn = false
-keyGui.Parent = game:GetService("CoreGui")
+local hum = getChar():WaitForChild("Humanoid")
 
-local keyFrame = new(keyGui, "Frame", {
-    Size = UDim2.new(0,360,0,220),
-    Position = UDim2.new(0.5,-180,0.5,-110),
-    BackgroundColor3 = THEME.Dark,
-    Active = true,
-    Draggable = true
-})
-new(keyFrame, "UICorner", {CornerRadius = UDim.new(0,12)})
-local keyTitle = new(keyFrame, "TextLabel", {
-    Size = UDim2.new(1,0,0,56),
-    BackgroundColor3 = THEME.Main,
-    Text = "Sigma Hub — Nhập key để mở",
-    TextColor3 = Color3.new(1,1,1),
-    Font = Enum.Font.GothamBold,
-    TextSize = 20
-})
-new(keyTitle, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-local keyBox = new(keyFrame, "TextBox", {
-    Size = UDim2.new(1,-40,0,48),
-    Position = UDim2.new(0,20,0,76),
-    PlaceholderText = "Nhập key tại đây...",
-    Text = "",
-    Font = Enum.Font.Gotham,
-    TextSize = 18,
-    TextColor3 = THEME.Text,
-    BackgroundColor3 = THEME.Panel
-})
-new(keyBox, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-local openBtn = new(keyFrame, "TextButton", {
-    Size = UDim2.new(1,-40,0,44),
-    Position = UDim2.new(0,20,0,136),
-    Text = "MỞ MENU",
-    Font = Enum.Font.GothamBold,
-    TextSize = 20,
-    BackgroundColor3 = THEME.Accent,
-    TextColor3 = Color3.new(1,1,1)
-})
-new(openBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-local keyMsg = new(keyFrame, "TextLabel", {
-    Size = UDim2.new(1,0,0,26),
-    Position = UDim2.new(0,0,1,-26),
-    BackgroundTransparency = 1,
-    Text = "",
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextColor3 = Color3.fromRGB(255,100,100)
-})
-
--- helper to destroy key GUI and load main
-local function destroyKeyAndLoad()
-    pcall(function() keyGui:Destroy() end)
-    task.wait(0.12)
-    -- will call LoadSigma below
-    pcall(LoadSigma)
-end
-
-openBtn.MouseButton1Click:Connect(function()
-    if keyBox.Text == KEY then
-        keyMsg.Text = "✔ Đúng key — Đang mở menu..."
-        task.wait(0.25)
-        destroyKeyAndLoad()
-    else
-        keyMsg.Text = "❌ Sai key!"
+Tabs.Player:AddSlider("Walk", {
+    Title = "Tốc độ chạy",
+    Default = 16,
+    Min = 10,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(v)
+        hum.WalkSpeed = v
     end
-end)
+})
 
--- Allow ENTER to submit
-keyBox.FocusLost:Connect(function(enter)
-    if enter then
-        openBtn:Activate()
+Tabs.Player:AddSlider("Jump", {
+    Title = "Độ cao nhảy",
+    Default = 50,
+    Min = 10,
+    Max = 300,
+    Rounding = 1,
+    Callback = function(v)
+        hum.JumpPower = v
     end
-end)
+})
 
--- ======= LOAD SIGMA (main function) =======
-function LoadSigma()
-    -- guard: if already loaded, return
-    if game:GetService("CoreGui"):FindFirstChild("SigmaUI") then return end
-
-    local core = game:GetService("CoreGui")
-    local sigmaGui = Instance.new("ScreenGui", core)
-    sigmaGui.Name = "SigmaUI"
-    sigmaGui.ResetOnSpawn = false
-
-    -- floating toggle button (mini)
-    local miniGui = Instance.new("ScreenGui", core)
-    miniGui.Name = "SigmaMini"
-    local miniBtn = new(miniGui, "ImageButton", {
-        Size = UDim2.new(0,46,0,46),
-        Position = UDim2.new(0.02,0,0.22,0),
-        BackgroundTransparency = 0.2,
-        BackgroundColor3 = THEME.Panel,
-        Image = "",
-        AutoButtonColor = true,
-        ZIndex = 5
-    })
-    new(miniBtn, "UICorner", {CornerRadius = UDim.new(1,10)})
-    local miniTxt = new(miniBtn, "TextLabel", {
-        Size = UDim2.new(1,0,1,0),
-        BackgroundTransparency = 1,
-        Text = "Σ",
-        Font = Enum.Font.GothamBold,
-        TextColor3 = THEME.Text,
-        TextSize = 22
-    })
-
-    -- main frame
-    local frame = new(sigmaGui, "Frame", {
-        Size = UDim2.new(0,520,0,380),
-        Position = UDim2.new(0.5,-260,0.5,-190),
-        BackgroundColor3 = THEME.Dark,
-        Active = true,
-        Draggable = true
-    })
-    new(frame, "UICorner", {CornerRadius = UDim.new(0,14)})
-
-    -- header
-    local header = new(frame, "Frame", {
-        Size = UDim2.new(1,0,0,64),
-        BackgroundColor3 = THEME.Main
-    })
-    new(header, "UICorner", {CornerRadius = UDim.new(0,12)})
-    local headerLabel = new(header, "TextLabel", {
-        Text = "Sigma Hub  —  XQ Edition",
-        Size = UDim2.new(1,0,1,0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 20,
-        TextColor3 = Color3.new(1,1,1)
-    })
-
-    -- left sidebar (tabs)
-    local sidebar = new(frame, "Frame", {
-        Size = UDim2.new(0,140,1,0),
-        Position = UDim2.new(0,0,0,64),
-        BackgroundColor3 = THEME.Panel
-    })
-    new(sidebar, "UICorner", {CornerRadius = UDim.new(0,10)})
-
-    local content = new(frame, "Frame", {
-        Size = UDim2.new(1,-140,1, -64),
-        Position = UDim2.new(0,140,0,64),
-        BackgroundTransparency = 1
-    })
-
-    -- tab buttons
-    local tabs = {"Home","System","Farm","Boss","PvP"}
-    local tabFrames = {}
-    for i, t in ipairs(tabs) do
-        local btn = new(sidebar, "TextButton", {
-            Size = UDim2.new(1, -20, 0, 54),
-            Position = UDim2.new(0, 10, 0, 12 + (i-1)*62),
-            Text = t,
-            Font = Enum.Font.GothamSemibold,
-            TextSize = 18,
-            BackgroundColor3 = Color3.fromRGB(36,36,36),
-            TextColor3 = THEME.Text
-        })
-        new(btn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-        local page = new(content, "Frame", {
-            Size = UDim2.new(1, -20, 1, -20),
-            Position = UDim2.new(0, 10, 0, 10),
-            BackgroundTransparency = 1,
-            Visible = (i==1)
-        })
-        tabFrames[t] = page
-
-        btn.MouseButton1Click:Connect(function()
-            for _,f in pairs(tabFrames) do f.Visible = false end
-            page.Visible = true
-        end)
+Tabs.Player:AddButton({
+    Title = "Reset nhân vật",
+    Callback = function()
+        player.Character:BreakJoints()
     end
+})
 
-    -- ===== Tab: Home =====
-    do
-        local page = tabFrames["Home"]
-        -- avatar & info
-        local plr = game.Players.LocalPlayer
-        local avatarFrame = new(page, "Frame", {
-            Size = UDim2.new(0.46,0,0.46,0),
-            Position = UDim2.new(0,0,0,0),
-            BackgroundColor3 = Color3.fromRGB(28,28,30)
-        })
-        new(avatarFrame, "UICorner", {CornerRadius = UDim.new(0,8)})
-        local nameLabel = new(avatarFrame, "TextLabel", {
-            Size = UDim2.new(1,0,0,28),
-            Position = UDim2.new(0,0,0,6),
-            BackgroundTransparency = 1,
-            Text = "Player: "..(plr and plr.Name or "Unknown"),
-            Font = Enum.Font.GothamBold,
-            TextSize = 16,
-            TextColor3 = THEME.Text
-        })
-
-        -- ping / fps / device
-        local statusFrame = new(page, "Frame", {
-            Size = UDim2.new(0.5,0,0.46,0),
-            Position = UDim2.new(0.5, -10, 0, 0),
-            BackgroundColor3 = Color3.fromRGB(28,28,30)
-        })
-        new(statusFrame, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-        local pingLabel = new(statusFrame, "TextLabel", {
-            Text = "Ping: ... ms",
-            Size = UDim2.new(1,0,0,28),
-            Position = UDim2.new(0,8,0,8),
-            BackgroundTransparency = 1,
-            Font = Enum.Font.GothamBold,
-            TextSize = 16,
-            TextColor3 = THEME.Text
-        })
-        local fpsLabel = new(statusFrame, "TextLabel", {
-            Text = "FPS: ...",
-            Size = UDim2.new(1,0,0,28),
-            Position = UDim2.new(0,8,0,44),
-            BackgroundTransparency = 1,
-            Font = Enum.Font.GothamBold,
-            TextSize = 16,
-            TextColor3 = THEME.Text
-        })
-        local devLabel = new(statusFrame, "TextLabel", {
-            Text = "Device: ...",
-            Size = UDim2.new(1,0,0,28),
-            Position = UDim2.new(0,8,0,80),
-            BackgroundTransparency = 1,
-            Font = Enum.Font.Gotham,
-            TextSize = 14,
-            TextColor3 = THEME.Text
-        })
-
-        -- update stats
-        task.spawn(function()
-            local rs = game:GetService("RunService")
-            local heartbeat = rs.Heartbeat
-            local last = tick()
-            local frameCount = 0
-            while task.wait(0.5) do
-                -- FPS approx
-                frameCount = frameCount + 1
-                fpsLabel.Text = "FPS: "..tostring(math.random(45,90)) -- approximate
-                -- ping (best-effort)
-                local success, ping = pcall(function()
-                    return math.floor(game:GetService("Stats"):FindFirstChild("DataModelStage") and 0 or (game:GetService("Stats").PerformanceStats["ClientPing"]:GetValue()))
-                end)
-                pingLabel.Text = "Ping: "..(success and (math.random(30,120).." ms") or "N/A")
-                devLabel.Text = "Device: "..(identifyexecutor and identifyexecutor() or "Unknown")
-            end
-        end)
-
-        -- quick links
-        local link1 = new(page, "TextButton", {
-            Size = UDim2.new(0.46,0,0,40),
-            Position = UDim2.new(0,0,0.5,10),
-            Text = "Discord",
-            Font = Enum.Font.GothamBold,
-            TextSize = 16,
-            BackgroundColor3 = THEME.Accent,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        link1.MouseButton1Click:Connect(function()
-            pcall(function() setclipboard("https://discord.gg/") end)
-        end)
-        local link2 = new(page, "TextButton", {
-            Size = UDim2.new(0.46,0,0,40),
-            Position = UDim2.new(0.5,10,0.5,10),
-            Text = "TikTok",
-            Font = Enum.Font.GothamBold,
-            TextSize = 16,
-            BackgroundColor3 = THEME.Main,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        link2.MouseButton1Click:Connect(function()
-            pcall(function() setclipboard("https://www.tiktok.com/@xun.quyn15") end)
-        end)
-    end
-
-    -- ===== Tab: System =====
-    do
-        local page = tabFrames["System"]
-        -- Anti AFK + AFK counter
-        local afkFrame = new(page, "Frame", {
-            Size = UDim2.new(0.48,0,0.3,0),
-            Position = UDim2.new(0,0,0,0),
-            BackgroundColor3 = Color3.fromRGB(28,28,30)
-        })
-        new(afkFrame, "UICorner", {CornerRadius = UDim.new(0,8)})
-        local afkLabel = new(afkFrame, "TextLabel", {
-            Text = "AFK: 0s",
-            Size = UDim2.new(1,0,0,36),
-            Position = UDim2.new(0,8,0,8),
-            BackgroundTransparency = 1,
-            Font = Enum.Font.GothamBold,
-            TextSize = 18,
-            TextColor3 = THEME.Text
-        })
-        local totalAFK = new(afkFrame, "TextLabel", {
-            Text = "Tổng AFK: 0 phút",
-            Size = UDim2.new(1,0,0,24),
-            Position = UDim2.new(0,8,0,46),
-            BackgroundTransparency = 1,
-            Font = Enum.Font.Gotham,
-            TextSize = 14,
-            TextColor3 = Color3.fromRGB(200,200,200)
-        })
-
-        local antiBtn = new(afkFrame, "TextButton", {
-            Text = "Bật ANTI AFK",
-            Size = UDim2.new(1,-16,0,36),
-            Position = UDim2.new(0,8,0,76),
-            BackgroundColor3 = THEME.Accent,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        new(antiBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
-        local fpsBoostBtn = new(page, "TextButton", {
-            Text = "Bật FPS Boost",
-            Size = UDim2.new(0.48,0,0,40),
-            Position = UDim2.new(0,0,0.35,16),
-            BackgroundColor3 = THEME.Main,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        new(fpsBoostBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
-        local tpBtn = new(page, "TextButton", {
-            Text = "Toggle Auto Teleport",
-            Size = UDim2.new(0.48,0,0,40),
-            Position = UDim2.new(0.5,8,0.35,16),
-            BackgroundColor3 = Color3.fromRGB(50,50,55),
-            Font = Enum.Font.GothamBold,
-            TextColor3 = THEME.Text
-        })
-        new(tpBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
-        -- anti-afk implementation + AFK counter
-        local antiOn = false
-        antiBtn.MouseButton1Click:Connect(function()
-            antiOn = not antiOn
-            antiBtn.Text = antiOn and "Tắt ANTI AFK" or "Bật ANTI AFK"
-            if antiOn then
-                antiBtn.BackgroundColor3 = Color3.fromRGB(200,80,80)
-            else
-                antiBtn.BackgroundColor3 = THEME.Accent
-            end
-        end)
-        task.spawn(function()
+---------------------------------------------------------------
+-- 🟢 TAB ANTI AFK
+---------------------------------------------------------------
+Tabs.AntiAFK:AddToggle("AAFK", {
+    Title = "Bật Anti AFK",
+    Default = false,
+    Callback = function(state)
+        if state then
+            Fluent:Notify({Title="Anti AFK", Content="Đã bật!", Duration=3})
             local vu = game:GetService("VirtualUser")
-            local s = 0
-            while task.wait(1) do
-                if antiOn then
-                    pcall(function()
-                        local pl = game.Players.LocalPlayer
-                        if pl then
-                            -- simulate user input to prevent kick
-                            vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-                            task.wait(0.5)
-                            vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-                        end
-                    end)
-                end
-                s = s + 1
-                afkLabel.Text = "AFK: "..s.."s"
-                totalAFK.Text = "Tổng AFK: "..math.floor(s/60).." phút"
-            end
-        end)
-
-        -- fps boost
-        local fpsOn = false
-        fpsBoostBtn.MouseButton1Click:Connect(function()
-            fpsOn = not fpsOn
-            fpsBoostBtn.Text = fpsOn and "FPS Boost: ON" or "FPS Boost: OFF"
-            if fpsOn then
-                pcall(function()
-                    -- remove expensive effects where possible
-                    if workspace:FindFirstChildOfClass("Terrain") then
-                        -- try to reduce decorations if executor supports
-                        pcall(function() sethiddenproperty(workspace.Terrain, "Decoration", false) end)
-                    end
-                    pcall(function() game.Lighting.GlobalShadows = false end)
-                    pcall(function() game.Lighting.FogEnd = 9e9 end)
-                end)
-            else
-                pcall(function() game.Lighting.GlobalShadows = true end)
-            end
-        end)
-
-        -- Auto Teleport simple
-        local tpOn = false
-        tpBtn.MouseButton1Click:Connect(function()
-            tpOn = not tpOn
-            tpBtn.Text = tpOn and "AutoTP: ON" or "AutoTP: OFF"
-        end)
-        task.spawn(function()
-            local pl = game.Players.LocalPlayer
-            while task.wait(0.1) do
-                if tpOn and pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = pl.Character.HumanoidRootPart
-                    -- move slightly forward to avoid idle / simulate movement
-                    hrp.CFrame = hrp.CFrame * CFrame.new(0,0,-0.8)
-                end
-            end
-        end)
-    end
-
-    -- ===== Tab: Farm =====
-    do
-        local page = tabFrames["Farm"]
-        local farmBtn = new(page, "TextButton", {
-            Text = "Auto Farm Money (ON/OFF)",
-            Size = UDim2.new(0.46,0,0,44),
-            Position = UDim2.new(0,0,0,8),
-            BackgroundColor3 = THEME.Accent,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        new(farmBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-        local pickupBtn = new(page, "TextButton", {
-            Text = "Auto Pickup (ON/OFF)",
-            Size = UDim2.new(0.46,0,0,44),
-            Position = UDim2.new(0.5,8,0,8),
-            BackgroundColor3 = Color3.fromRGB(48,48,56),
-            Font = Enum.Font.GothamBold,
-            TextColor3 = THEME.Text
-        })
-        new(pickupBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-        local autoFarm = false
-        farmBtn.MouseButton1Click:Connect(function()
-            autoFarm = not autoFarm
-            farmBtn.Text = autoFarm and "Auto Farm Money: ON" or "Auto Farm Money: OFF"
-            farmBtn.BackgroundColor3 = autoFarm and Color3.fromRGB(200,80,80) or THEME.Accent
-        end)
-
-        local autoPickup = false
-        pickupBtn.MouseButton1Click:Connect(function()
-            autoPickup = not autoPickup
-            pickupBtn.Text = autoPickup and "Auto Pickup: ON" or "Auto Pickup: OFF"
-        end)
-
-        -- basic auto-farm (best-effort, game-specific logic required)
-        task.spawn(function()
-            local pl = game.Players.LocalPlayer
-            while task.wait(1) do
-                if autoFarm and pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = pl.Character.HumanoidRootPart
-                    -- naive: find nearest "Money" or "Drop" in workspace
-                    local nearest, nd = nil, math.huge
-                    for _, obj in pairs(workspace:GetDescendants()) do
-                        if obj:IsA("BasePart") and obj.Name:lower():find("money") or obj.Name:lower():find("drop") then
-                            local d = (obj.Position - hrp.Position).Magnitude
-                            if d < nd then nearest, nd = obj, d end
-                        end
-                    end
-                    if nearest and nd < 200 then
-                        pcall(function() hrp.CFrame = CFrame.new(nearest.Position + Vector3.new(0,3,0)) end)
-                    end
-                end
-                if autoPickup and pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                    -- attempt touch nearby pickups
-                    for _, obj in pairs(workspace:GetChildren()) do
-                        if obj:IsA("BasePart") and (obj.Position - pl.Character.HumanoidRootPart.Position).Magnitude < 10 then
-                            pcall(function() pl.Character.HumanoidRootPart.CFrame = CFrame.new(obj.Position + Vector3.new(0,3,0)) end)
-                        end
-                    end
-                end
-            end
-        end)
-    end
-
-    -- ===== Tab: Boss =====
-    do
-        local page = tabFrames["Boss"]
-        local openBossGuiBtn = new(page, "TextButton", {
-            Text = "Mở GUI Farm Boss",
-            Size = UDim2.new(0.6,0,0,44),
-            Position = UDim2.new(0,8,0,8),
-            BackgroundColor3 = THEME.Accent,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        new(openBossGuiBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-        openBossGuiBtn.MouseButton1Click:Connect(function()
-            -- spawn farm boss GUI (simple)
-            if core:FindFirstChild("FarmBossGUI") then
-                core.FarmBossGUI.Enabled = not core.FarmBossGUI.Enabled
-                return
-            end
-
-            local GUI = Instance.new("ScreenGui", core)
-            GUI.Name = "FarmBossGUI"
-
-            local ToggleButton = new(GUI, "ImageButton", {
-                Size = UDim2.new(0,56,0,56),
-                Position = UDim2.new(0,16,0,220),
-                Image = "",
-                BackgroundColor3 = THEME.Panel
-            })
-            new(ToggleButton, "UICorner", {CornerRadius = UDim.new(1,10)})
-            local FarmMenu = new(GUI, "Frame", {
-                Size = UDim2.new(0,420,0,360),
-                Position = UDim2.new(0.5,-210,0.5,-180),
-                BackgroundColor3 = THEME.Panel,
-                Active = true,
-                Draggable = true
-            })
-            new(FarmMenu, "UICorner", {CornerRadius = UDim.new(0,12)})
-            local Title = new(FarmMenu, "TextLabel", {
-                Size = UDim2.new(1,0,0,50),
-                BackgroundTransparency = 1,
-                Text = "FARM BOSS",
-                Font = Enum.Font.GothamBold,
-                TextSize = 22,
-                TextColor3 = THEME.Text
-            })
-            local bossHp = new(FarmMenu, "TextLabel", {
-                Size = UDim2.new(1,-40,0,30),
-                Position = UDim2.new(0,20,0,70),
-                BackgroundTransparency = 1,
-                Text = "Máu Boss: ...",
-                Font = Enum.Font.GothamBold,
-                TextSize = 18,
-                TextColor3 = Color3.fromRGB(255,80,80)
-            })
-            local farmBtn = new(FarmMenu, "TextButton", {
-                Size = UDim2.new(1,-40,0,44),
-                Position = UDim2.new(0,20,0,110),
-                Text = "Bật Farm Boss",
-                BackgroundColor3 = THEME.Accent,
-                Font = Enum.Font.GothamBold,
-                TextColor3 = Color3.new(1,1,1)
-            })
-            new(farmBtn, "UICorner", {CornerRadius = UDim.new(0,8)})
-
-            local function findBoss()
-                local pl = game.Players.LocalPlayer
-                if not pl or not pl.Character or not pl.Character:FindFirstChild("HumanoidRootPart") then return nil end
-                local hrp = pl.Character.HumanoidRootPart
-                local near, nd = nil, math.huge
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                        if v.Humanoid.Health > 0 then
-                            local d = (v.HumanoidRootPart.Position - hrp.Position).Magnitude
-                            if d < nd then near, nd = v, d end
-                        end
-                    end
-                end
-                return near
-            end
-
-            local auto = false
-            farmBtn.MouseButton1Click:Connect(function()
-                auto = not auto
-                farmBtn.Text = auto and "Tắt Farm Boss" or "Bật Farm Boss"
-                farmBtn.BackgroundColor3 = auto and Color3.fromRGB(200,80,80) or THEME.Accent
-                if auto then
-                    task.spawn(function()
-                        local pl = game.Players.LocalPlayer
-                        while auto and task.wait(0.06) do
-                            local b = findBoss()
-                            if b and b:FindFirstChild("HumanoidRootPart") and pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                                pcall(function()
-                                    pl.Character.HumanoidRootPart.CFrame = CFrame.new(b.HumanoidRootPart.Position + Vector3.new(0,25,0))
-                                    local tool = pl.Character:FindFirstChildOfClass("Tool")
-                                    if tool then
-                                        pcall(function() tool:Activate() end)
-                                    end
-                                end)
-                            end
-                        end
-                    end)
-                end
+            player.Idled:Connect(function()
+                vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
             end)
-
-            ToggleButton.MouseButton1Click:Connect(function()
-                FarmMenu.Visible = not FarmMenu.Visible
-            end)
-        end)
-    end
-
-    -- ===== Tab: PvP =====
-    do
-        local page = tabFrames["PvP"]
-        -- walk speed / jump power
-        local wsBox = new(page, "TextBox", {
-            PlaceholderText = "WalkSpeed (default 16)",
-            Size = UDim2.new(0.3,0,0,34),
-            Position = UDim2.new(0,8,0,8),
-            BackgroundColor3 = Color3.fromRGB(36,36,36),
-            TextColor3 = THEME.Text,
-            Font = Enum.Font.Gotham
-        })
-        local wsBtn = new(page, "TextButton", {
-            Text = "Set WS",
-            Size = UDim2.new(0.2,0,0,34),
-            Position = UDim2.new(0.32,12,0,8),
-            BackgroundColor3 = THEME.Accent,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-        local jpBox = new(page, "TextBox", {
-            PlaceholderText = "JumpPower (default 50)",
-            Size = UDim2.new(0.3,0,0,34),
-            Position = UDim2.new(0,8,0,52),
-            BackgroundColor3 = Color3.fromRGB(36,36,36),
-            TextColor3 = THEME.Text,
-            Font = Enum.Font.Gotham
-        })
-        local jpBtn = new(page, "TextButton", {
-            Text = "Set JP",
-            Size = UDim2.new(0.2,0,0,34),
-            Position = UDim2.new(0.32,12,0,52),
-            BackgroundColor3 = THEME.Accent,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.new(1,1,1)
-        })
-
-        wsBtn.MouseButton1Click:Connect(function()
-            local v = tonumber(wsBox.Text)
-            if v and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = v
-            end
-        end)
-        jpBtn.MouseButton1Click:Connect(function()
-            local v = tonumber(jpBox.Text)
-            if v and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = v
-            end
-        end)
-
-        -- aimlock (basic)
-        local aimBtn = new(page, "TextButton", {
-            Text = "AimLock: OFF",
-            Size = UDim2.new(0.3,0,0,36),
-            Position = UDim2.new(0,8,0,100),
-            BackgroundColor3 = Color3.fromRGB(50,50,56),
-            Font = Enum.Font.GothamBold,
-            TextColor3 = THEME.Text
-        })
-        new(aimBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
-        local hitboxBtn = new(page, "TextButton", {
-            Text = "Hitbox Expand: OFF",
-            Size = UDim2.new(0.3,0,0,36),
-            Position = UDim2.new(0.32,12,0,100),
-            BackgroundColor3 = Color3.fromRGB(50,50,56),
-            Font = Enum.Font.GothamBold,
-            TextColor3 = THEME.Text
-        })
-        new(hitboxBtn, "UICorner", {CornerRadius = UDim.new(0,6)})
-
-        local aimOn = false
-        aimBtn.MouseButton1Click:Connect(function()
-            aimOn = not aimOn
-            aimBtn.Text = aimOn and "AimLock: ON" or "AimLock: OFF"
-            aimBtn.BackgroundColor3 = aimOn and Color3.fromRGB(200,80,80) or Color3.fromRGB(50,50,56)
-        end)
-
-        local hitboxOn = false
-        hitboxBtn.MouseButton1Click:Connect(function()
-            hitboxOn = not hitboxOn
-            hitboxBtn.Text = hitboxOn and "Hitbox Expand: ON" or "Hitbox Expand: OFF"
-            hitboxBtn.BackgroundColor3 = hitboxOn and Color3.fromRGB(200,80,80) or Color3.fromRGB(50,50,56)
-            -- apply to other players
-            if hitboxOn then
-                for _, pl in pairs(game.Players:GetPlayers()) do
-                    if pl ~= game.Players.LocalPlayer and pl.Character and pl.Character:FindFirstChild("Head") then
-                        pcall(function() pl.Character.Head.Size = Vector3.new(2,2,2) end)
-                    end
-                end
-            else
-                for _, pl in pairs(game.Players:GetPlayers()) do
-                    if pl ~= game.Players.LocalPlayer and pl.Character and pl.Character:FindFirstChild("Head") then
-                        pcall(function() pl.Character.Head.Size = Vector3.new(1,1,1) end)
-                    end
-                end
-            end
-        end)
-
-        -- Aim implementation
-        task.spawn(function()
-            local mouse = game.Players.LocalPlayer:GetMouse()
-            while task.wait() do
-                if aimOn and mouse and mouse.Target then
-                    -- find nearest player to mouse.Target
-                    local targetPlayer, bestDist = nil, math.huge
-                    for _, pl in pairs(game.Players:GetPlayers()) do
-                        if pl ~= game.Players.LocalPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-                            local root = pl.Character.HumanoidRootPart
-                            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
-                            if onScreen then
-                                local d = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
-                                if d < bestDist then
-                                    bestDist, targetPlayer = d, pl
-                                end
-                            end
-                        end
-                    end
-                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        -- set camera CFrame toward target head
-                        pcall(function()
-                            local cam = workspace.CurrentCamera
-                            local headPos = targetPlayer.Character.Head.Position
-                            cam.CFrame = CFrame.new(cam.CFrame.Position, headPos)
-                        end)
-                    end
-                end
-            end
-        end)
-    end
-
-    -- ===== Mini button behavior =====
-    miniBtn.MouseButton1Click:Connect(function()
-        frame.Visible = not frame.Visible
-    end)
-    -- allow dragging mini (ImageButton is draggable by default), and toggle by double-click
-    miniBtn.MouseButton2Click:Connect(function() frame:Destroy() miniGui:Destroy() end)
-
-    -- initial notification
-    pcall(function()
-        if (game.StarterGui and game.StarterGui.SetCore) then
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Sigma Hub",
-                Text = "Loaded — Press mini Σ to toggle UI",
-                Duration = 4
-            })
+        else
+            Fluent:Notify({Title="Anti AFK", Content="Đã tắt!", Duration=3})
         end
-    end)
-end
+    end
+})
 
--- end LoadSigma
+---------------------------------------------------------------
+-- ⚔️ TAB PVP
+---------------------------------------------------------------
+Tabs.PvP:AddButton({
+    Title = "ESP Người chơi",
+    Description = "Hiển thị player qua tường",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/K5Xjv4Hn"))()
+    end
+})
 
--- If user already entered key (for convenience), allow cheat: call LoadSigma directly (only if no key enforcement desired)
--- But since we use key system above, we wait for the Key UI to call LoadSigma.
+Tabs.PvP:AddButton({
+    Title = "Aimlock cơ bản",
+    Description = "Giữ chuột phải để Aimlock",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/YyR0tTvM"))()
+    end
+})
 
--- EOF
+---------------------------------------------------------------
+Window:SelectTab(Tabs.Home)
+Fluent:Notify({Title="Sigma Hub", Content="UI đã load xong!", Duration=3})
